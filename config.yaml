@@ -1,0 +1,167 @@
+# ============================================================
+# uSeq2Tracks Configuration (Snakemake)
+# ============================================================
+
+# ───────── REQUIRED PARAMETERS ─────────
+# Sample sheet with metadata and file paths
+samplesheet: "samples.csv"          # CSV describing samples
+genome: "genome.fa"                  # Reference FASTA file path - UPDATE THIS PATH
+genome_id: "galGal6_chicken_wing"   # REQUIRED: Genome identifier - SET TO YOUR GENOME
+                                    # This will be used to tag all output files and directories
+                                    # Example: genome_id: "galGal6"
+gtf: ""                             # GTF annotation file (optional, for RNA-seq gene counting)
+                                    # Example: gtf: "annotations.gtf" or gtf: "gencode.v44.annotation.gtf"
+outdir: "./results"                    # Output root directory
+
+# ───────── PIPELINE MODE ─────────
+rapid_mode: false                   # RAPID MODE: Skip QC, generate only essential browser tracks
+                                    # Set to true for public datasets that don't need QC
+                                    # Output: simplified folder with bigwigs and peaks only
+
+# ───────── GENOME INDEXING OPTIONS ─────────
+genome_indexing:
+  prefer_csi: true                   # Prefer .csi indices if present
+  force_csi: false                   # Force .csi even if contigs <512 Mb
+
+# ───────── PIPELINE-SPECIFIC PARAMETERS ─────────
+
+# Adapter trimming configuration
+adapter_trimming:
+  enabled: true                     # Set to true to enable adapter trimming
+  threads: 4                        # Number of threads for fastp
+  min_length: 20                    # Minimum read length after trimming
+  quality_cutoff: 20                # Mean quality cutoff for sliding window
+  poly_g_min_len: 10               # Minimum length for poly-G trimming
+  adapter1: ""                     # Custom R1 adapter sequence (optional)
+  adapter2: ""                     # Custom R2 adapter sequence (optional)
+  extra_opts: ""                   # Additional fastp options
+
+# Parameter sweep configuration
+parameter_sweep:
+  enabled: false                    # Set to true to enable parameter sweep
+  qvalues: [0.05, 0.01, 0.005, 0.001]  # Q-values to test for all peak calling
+  genrich_enabled: false            # Set to true to enable Genrich parameter sweep
+  genrich_qvalues: [0.05, 0.01, 0.005, 0.001]  # Q-values to test for Genrich
+
+# Alternative peak callers
+genrich:
+  enabled: false                    # Set to true to enable Genrich peak calling
+  merge_replicates: true           # Merge replicates for peak calling (recommended)
+  atac_mode: true                  # Use -j flag for ATAC-seq and CUT&RUN
+  options: "-q 0.05"               # Additional Genrich options
+
+# ATAC-seq specific parameters
+atacseq:
+  mapper: "bowtie2"           # bowtie2 or bwa_mem2
+  bowtie2_opts: "--very-sensitive"
+  bwa_mem2_opts: "-M"
+  threads: 32
+  markdup: false              # OPTIONAL: Mark duplicates (false = better accessibility signal)
+  shift: -75                  # MACS3 shift for ATAC-seq
+  extsize: 150                # MACS3 extension size
+  macs3_opts: "--qval 0.05"
+  bw_norm: "CPM"              # BigWig normalization: CPM, RPKM, BPM, RPGC
+
+# WGS specific parameters
+wgs:
+  mapper: "bwa_mem2"          # bwa_mem2 or bowtie2
+  bwa_mem2_opts: "-M"
+  bowtie2_opts: "--very-sensitive"
+  threads: 32
+  markdup: true               # OPTIONAL: Remove duplicates (true recommended for variant calling)
+  bw_norm: "CPM"              # BigWig normalization
+  variant_calling: true       # Enable variant calling
+
+# ChIP-seq parameters  
+chipseq:
+  mapper: "bowtie2"           # bowtie2 | bwa_mem2
+  bowtie2_opts: "--very-sensitive"
+  bwa_mem2_opts: "-M"
+  threads: 32
+  markdup: false              # OPTIONAL: Mark/remove duplicates (false for ChIP-seq = better peak calling)
+  macs3_opts: "--qval 0.05 --keep-dup all"
+  control_tag: "input"
+  bw_norm: "CPM"              # BigWig normalization
+
+# CUT&RUN parameters
+cutrun:
+  mapper: "bowtie2"           # bowtie2 or bwa_mem2
+  bowtie2_opts: "--very-sensitive --local"
+  bwa_mem2_opts: "-M"
+  threads: 32
+  markdup: false              # OPTIONAL: Mark duplicates (false = better protein binding signal)
+  shift: 0                    # MACS3 shift for CUT&RUN
+  extsize: 160                # MACS3 extension size
+  macs3_opts: "--keep-dup all"              # Additional MACS3 options
+  bw_norm: "CPM"              # BigWig normalization
+  
+  # Profile-QC parameters
+  qc:
+    run_profile_qc: true
+    gff: "genome.gff3"        # Gene annotation file
+    upstream: 3000
+    downstream: 3000
+    bin_size: 50
+    plot_format: "pdf"        # pdf or png
+
+# RNA-seq parameters
+rnaseq:
+  mapper: "star"              # star | hisat2
+  star_opts: "--outFilterMultimapNmax 20 --alignSJoverhangMin 8 --alignSJDBoverhangMin 1"
+  hisat2_opts: "--very-sensitive"
+  threads: 16
+  strand_specific: false
+  bw_norm: "CPM"              # BigWig normalization
+  gene_bed: "genes.bed"       # Gene BED file for QC
+
+# Long-read parameters
+nanopore:
+  mapper: "minimap2"
+  minimap2_opts: "--secondary=no"
+  threads: 32
+  bw_norm: "CPM"              # BigWig normalization
+  variant_calling: false      # Set to true to enable variant calling (requires clair3)
+  clair3_model: "/opt/models/r941_prom_sup_g5014"  # Clair3 model path (if variant_calling=true)
+
+pacbio:
+  mapper: "minimap2" 
+  minimap2_opts: "--secondary=no"
+  threads: 32
+  bw_norm: "CPM"              # BigWig normalization
+  deepvariant_model: "PACBIO"
+
+# ───────── RESOURCE ALLOCATION ─────────
+resources:
+  default_threads: 4
+  mapping_threads: 8
+  sort_threads: 4
+  index_threads: 8
+  sort_memory_mb: 16000        # Memory for samtools sort (16GB default)
+  tmpdir: "/tmp"               # Temporary directory for sorting
+
+# Memory settings (MB) for different job types
+memory:
+  small: 8000      # FastQC, small utilities
+  medium: 32000    # Most mapping, sorting
+  large: 64000     # WGS mapping, STAR indexing
+  xlarge: 128000    # STAR indexing with large genomes
+
+# Ancient DNA specific parameters
+ancientdna:
+  mapper: "bwa_aln"           # bwa_aln or bwa_mem
+  bwa_aln_opts: "-l 1024 -n 0.01 -o 2"  # Parameters for damaged DNA
+  bwa_mem_opts: "-M"
+  threads: 32
+  markdup: true               # OPTIONAL: Remove duplicates (true recommended for degraded DNA)
+  min_mapq: 30
+  min_baseq: 20
+  bw_norm: "CPM"              # BigWig normalization
+  damage_analysis: true
+
+# UCSC Track Hub settings
+ucsc:
+  hub_name: "uSeq2Tracks_Hub"
+  hub_short_label: "uSeq2Tracks"
+  hub_long_label: "Universal Sequencing to Tracks Pipeline Output"
+  hub_email: "your.email@institution.edu"
+  genome_name: "custom"

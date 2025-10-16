@@ -1,0 +1,3 @@
+sample_id,type,sra_id,read1,read2,experiment_group,replicate_group,condition
+name,rnaseq,,local.fastq.gz,local2.fastq.gz,group1,group2,control
+name,rnaseq,,local3.fastq.gz,local4.fastq.gz,group1,group2,treatment
