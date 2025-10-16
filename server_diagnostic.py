@@ -13,7 +13,7 @@ print("🔍 uSeq2Tracks Path Diagnostic")
 print("=" * 50)
 
 # Check if files exist
-files_to_check = ['config.yaml', 'Snakefile', 'RNAExp_samples.csv']
+files_to_check = ['config.yaml', 'Snakefile', 'sample_sheet.csv']
 for f in files_to_check:
     exists = os.path.exists(f)
     print(f"File {f}: {'✅ EXISTS' if exists else '❌ MISSING'}")

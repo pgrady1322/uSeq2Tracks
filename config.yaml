@@ -6,7 +6,7 @@
 # Sample sheet with metadata and file paths
 samplesheet: "samples.csv"          # CSV describing samples
 genome: "genome.fa"                  # Reference FASTA file path - UPDATE THIS PATH
-genome_id: "galGal6_chicken_wing"   # REQUIRED: Genome identifier - SET TO YOUR GENOME
+genome_id: "galGal6"   # REQUIRED: Genome identifier - SET TO YOUR GENOME
                                     # This will be used to tag all output files and directories
                                     # Example: genome_id: "galGal6"
 gtf: ""                             # GTF annotation file (optional, for RNA-seq gene counting)
