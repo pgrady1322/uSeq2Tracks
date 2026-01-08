@@ -1,0 +1,20 @@
+# Example samplesheet for uSeq2Tracks Nextflow pipeline
+
+# Column descriptions:
+# - sample_id: Unique identifier for the sample
+# - type: Assay type (atacseq, chipseq, cutrun, rnaseq, wgs, nanopore, pacbio, ancientdna)
+# - sra_id: SRA accession (leave empty if using local files)
+# - read1: Path to R1 FASTQ file (leave empty if using SRA)
+# - read2: Path to R2 FASTQ file (leave empty if using SRA or single-end)
+# - experiment_group: Experiment identifier for grouping samples
+# - replicate_group: Replicate group for merging
+# - condition: Sample condition/treatment
+
+sample_id,type,sra_id,read1,read2,experiment_group,replicate_group,condition
+ATAC_rep1,atacseq,,data/atac_rep1_R1.fastq.gz,data/atac_rep1_R2.fastq.gz,exp1,atac,treatment
+ATAC_rep2,atacseq,,data/atac_rep2_R1.fastq.gz,data/atac_rep2_R2.fastq.gz,exp1,atac,treatment
+ChIP_H3K27ac_rep1,chipseq,SRR1536404,,,exp1,H3K27ac,K562
+ChIP_H3K27ac_rep2,chipseq,SRR1536405,,,exp1,H3K27ac,K562
+ChIP_Input,chipseq,SRR1536406,,,exp1,input,input
+CutRun_H3K4me3,cutrun,,data/cutrun_R1.fastq.gz,data/cutrun_R2.fastq.gz,exp2,H3K4me3,K562
+CutRun_IgG,cutrun,,data/cutrun_igg_R1.fastq.gz,data/cutrun_igg_R2.fastq.gz,exp2,igg,control

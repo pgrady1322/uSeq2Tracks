@@ -1,0 +1,110 @@
+# Input/output parameters
+samplesheet: "samples.csv"
+genome: "/path/to/your/genome.fa"
+genome_id: "galGal6"  # REQUIRED: Change to your genome identifier
+gtf: null  # Optional: path to GTF file for RNA-seq
+outdir: "./results"
+
+# Pipeline mode
+rapid_mode: false
+skip_fastqc: false
+skip_multiqc: false
+skip_adapter_trimming: false
+
+# Adapter trimming
+adapter_trimming:
+  enabled: true
+  min_length: 20
+  quality_cutoff: 20
+
+# ATAC-seq parameters
+atacseq:
+  mapper: "bowtie2"  # bowtie2 or bwa_mem2
+  bowtie2_opts: "--very-sensitive"
+  bwa_mem2_opts: "-M"
+  markdup: false
+  shift: -75
+  extsize: 150
+  macs3_opts: "--qval 0.05"
+  bw_norm: "CPM"  # CPM, RPKM, BPM, RPGC
+
+# ChIP-seq parameters
+chipseq:
+  mapper: "bowtie2"
+  bowtie2_opts: "--very-sensitive"
+  bwa_mem2_opts: "-M"
+  markdup: false
+  macs3_opts: "--qval 0.05 --keep-dup all"
+  control_tag: "input"  # Identifier for control samples
+  bw_norm: "CPM"
+
+# CUT&RUN parameters
+cutrun:
+  mapper: "bowtie2"
+  bowtie2_opts: "--very-sensitive --local"
+  bwa_mem2_opts: "-M"
+  markdup: false
+  shift: 0
+  extsize: 160
+  macs3_opts: "--keep-dup all"
+  bw_norm: "CPM"
+
+# RNA-seq parameters
+rnaseq:
+  mapper: "star"
+  star_opts: "--outFilterMultimapNmax 20"
+  bw_norm: "CPM"
+
+# WGS parameters
+wgs:
+  mapper: "bwa_mem2"
+  bwa_mem2_opts: "-M"
+  bowtie2_opts: "--very-sensitive"
+  markdup: true
+  bw_norm: "CPM"
+  variant_calling: true
+
+# Nanopore parameters
+nanopore:
+  mapper: "minimap2"
+  minimap2_opts: "--secondary=no"
+  bw_norm: "CPM"
+
+# PacBio parameters
+pacbio:
+  mapper: "minimap2"
+  minimap2_opts: "--secondary=no"
+  bw_norm: "CPM"
+
+# Ancient DNA parameters
+ancientdna:
+  mapper: "bwa_aln"
+  bwa_aln_opts: "-l 1024 -n 0.01 -o 2"
+  bwa_mem_opts: "-M"
+  min_mapq: 30
+  min_baseq: 20
+  bw_norm: "CPM"
+
+# UCSC track hub configuration
+ucsc:
+  hub_name: "myHub"
+  hub_short_label: "My Data Hub"
+  hub_long_label: "My Sequencing Data Analysis Hub"
+  genome_name: "galGal6"  # Should match genome_id
+  hub_email: "user@example.com"
+
+# Replicate merging
+merge_replicates: true
+
+# Parameter sweep (experimental)
+parameter_sweep:
+  enabled: false
+  qvalues: [0.05, 0.01, 0.005, 0.001]
+
+# Resource limits
+max_memory: "128.GB"
+max_cpus: 64
+max_time: "240.h"
+
+# Publishing options
+publish_dir_mode: "copy"

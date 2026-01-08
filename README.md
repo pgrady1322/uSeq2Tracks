@@ -1,9 +1,14 @@
 # uSeq2Tracks: Universal Sequencing to Browser Tracks Pipeline
 
 [![Snakemake](https://img.shields.io/badge/snakemake-≥6.0.0-brightgreen.svg)](https://snakemake.github.io)
+[![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A521.10.3-23aa62.svg?labelColor=000000)](https://www.nextflow.io/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A comprehensive Snakemake pipeline for processing diverse sequencing datasets and generating standardized genomic tracks for UCSC Genome Browser visualization. uSeq2Tracks handles everything from raw sequencing data to publication-ready browser tracks with minimal user intervention.
+A comprehensive pipeline for processing diverse sequencing datasets and generating standardized genomic tracks for UCSC Genome Browser visualization. uSeq2Tracks handles everything from raw sequencing data to publication-ready browser tracks with minimal user intervention.
+
+**Available in two implementations:**
+- **Snakemake** (stable, feature-complete)
+- **Nextflow** (new DSL2 implementation with enhanced cloud/HPC support)
 
 ## 🌟 Overview
 
@@ -89,6 +94,245 @@ ENCODE_Input,chipseq,SRR1536406,,,H3K27ac,input,input
 # Or run directly with Snakemake
 snakemake --use-conda --jobs 100
 ```
+
+---
+
+## 🔄 Nextflow Implementation (New!)
+
+uSeq2Tracks is now available as a **Nextflow DSL2** pipeline with improved scalability, cloud integration, and HPC support. The Nextflow version provides all core functionality with enhanced portability and parallelization.
+
+### Why Use Nextflow?
+
+**Advantages:**
+- ✅ **Better Parallelization**: Automatic task-level optimization
+- ✅ **Improved Resume**: More robust caching and resume capability
+- ✅ **Cloud Native**: Built-in support for AWS, Google Cloud, Azure
+- ✅ **HPC Ready**: First-class SLURM, SGE, PBS support
+- ✅ **Container First**: Excellent Docker/Singularity integration
+- ✅ **Portable**: Works identically across different systems
+
+### Nextflow Quick Start
+
+#### 1. Install Nextflow
+
+```bash
+curl -s https://get.nextflow.io | bash
+sudo mv nextflow /usr/local/bin/
+```
+
+#### 2. Configure Pipeline
+
+Create a `params.yaml` file:
+
+```yaml
+# Input/output
+samplesheet: "samples.csv"
+genome: "/path/to/genome.fa"
+genome_id: "galGal6"  # REQUIRED
+outdir: "./results"
+
+# Pipeline mode
+rapid_mode: false
+
+# ATAC-seq settings
+atacseq:
+  mapper: "bowtie2"
+  markdup: false
+  macs3_opts: "--qval 0.05"
+  bw_norm: "CPM"
+
+# ChIP-seq settings
+chipseq:
+  mapper: "bowtie2"
+  control_tag: "input"
+  markdup: false
+
+# UCSC hub
+ucsc:
+  hub_name: "myHub"
+  hub_short_label: "My Data"
+  hub_long_label: "My Sequencing Data Hub"
+  genome_name: "galGal6"
+  hub_email: "user@example.com"
+```
+
+#### 3. Run Nextflow Pipeline
+
+```bash
+# Navigate to nextflow directory
+cd nextflow/
+
+# With Docker (local)
+nextflow run main.nf -profile docker -params-file params.yaml
+
+# With Singularity (HPC)
+nextflow run main.nf -profile singularity -params-file params.yaml
+
+# With SLURM + Singularity
+nextflow run main.nf -profile slurm,singularity -params-file params.yaml
+
+# Rapid mode
+nextflow run main.nf -profile rapid,docker -params-file params.yaml
+
+# Resume failed run
+nextflow run main.nf -profile docker -resume
+```
+
+### Nextflow Features
+
+**Currently Implemented:**
+- ✅ ATAC-seq workflow (complete)
+- ✅ ChIP-seq workflow with control matching (complete)
+- ✅ CUT&RUN workflow (complete)
+- ✅ Genome preparation and indexing
+- ✅ UCSC track hub generation
+- ✅ Samplesheet validation
+- ✅ Dynamic resource allocation
+- ✅ Multiple execution profiles
+
+**In Development:**
+- 🔨 RNA-seq workflow
+- 🔨 WGS workflow
+- 🔨 Long-read workflows (Nanopore, PacBio)
+- 🔨 Ancient DNA workflow
+- 🔨 SRA download integration
+- 🔨 FastQC/MultiQC integration
+- 🔨 Replicate merging
+
+### Nextflow Profiles
+
+**Container Profiles:**
+- `docker`: Use Docker containers (recommended for local)
+- `singularity`: Use Singularity containers (recommended for HPC)
+- `conda`: Use Conda environments
+
+**Executor Profiles:**
+- `local`: Run on local machine (default)
+- `slurm`: Submit to SLURM scheduler
+- `sge`: Submit to SGE scheduler
+- `pbs`: Submit to PBS scheduler
+
+**Special Profiles:**
+- `test`: Run with minimal test dataset
+- `rapid`: Skip QC, generate essential tracks only
+
+**Combine profiles with commas:**
+```bash
+nextflow run main.nf -profile slurm,singularity  # SLURM + Singularity
+nextflow run main.nf -profile docker,rapid       # Docker + Rapid mode
+```
+
+### Nextflow Configuration Example
+
+```yaml
+# params.yaml for Nextflow
+samplesheet: "samples.csv"
+genome: "/path/to/genome.fa"
+genome_id: "galGal6"
+
+# Resource limits
+max_cpus: 64
+max_memory: "256.GB"
+max_time: "240.h"
+
+# ATAC-seq parameters
+atacseq:
+  mapper: "bowtie2"
+  bowtie2_opts: "--very-sensitive"
+  markdup: false
+  shift: -75
+  extsize: 150
+  bw_norm: "CPM"
+
+# ChIP-seq parameters  
+chipseq:
+  mapper: "bowtie2"
+  control_tag: "input"
+  macs3_opts: "--qval 0.05 --keep-dup all"
+  bw_norm: "CPM"
+```
+
+### Nextflow Output Structure
+
+```
+results/
+└── galGal6/                    # Genome ID
+    ├── atacseq/
+    │   ├── bam/
+    │   ├── peaks/
+    │   └── bigwig/
+    ├── chipseq/
+    │   ├── bam/
+    │   ├── peaks/
+    │   └── bigwig/
+    ├── ucsc/
+    │   ├── hub.txt
+    │   ├── genomes.txt
+    │   └── trackDb.txt
+    └── pipeline_info/         # Execution reports
+        ├── execution_report.html
+        ├── execution_timeline.html
+        └── execution_trace.txt
+```
+
+### Nextflow Quick Reference
+
+**Basic Commands:**
+```bash
+# Run pipeline
+nextflow run main.nf -profile docker -params-file params.yaml
+
+# Resume failed run
+nextflow run main.nf -profile docker -resume
+
+# Override parameters
+nextflow run main.nf --genome my_genome.fa --genome_id myGenome
+
+# Generate reports
+nextflow run main.nf -with-report -with-timeline -with-dag
+
+# Limit concurrent jobs
+nextflow run main.nf -profile slurm -qs 50
+```
+
+**Troubleshooting:**
+```bash
+# Check configuration
+nextflow config main.nf
+
+# Test run
+nextflow run main.nf -profile test,docker
+
+# Clean and restart
+rm -rf work/ && nextflow run main.nf
+```
+
+### Choosing Between Snakemake and Nextflow
+
+| Feature | Snakemake | Nextflow |
+|---------|-----------|----------|
+| **Maturity** | Stable, feature-complete | New implementation |
+| **Learning Curve** | Python-based (easier for most) | Groovy-based |
+| **Parallelization** | Good | Better (automatic) |
+| **Cloud Support** | Via plugins | Native |
+| **HPC Integration** | Good | Excellent |
+| **Resume Capability** | Good | Excellent |
+| **Container Support** | Good | Excellent |
+| **Best For** | General bioinformatics | HPC/Cloud deployments |
+
+**Recommendation:**
+- Use **Snakemake** for: Stable production, Python familiarity, feature-complete workflows
+- Use **Nextflow** for: HPC/cloud environments, better parallelization, modern DevOps practices
+
+### Nextflow Documentation
+
+For complete Nextflow documentation, see:
+- `nextflow/README.md` - Comprehensive guide
+- `nextflow/IMPLEMENTATION_STATUS.md` - Current implementation status
+- `nextflow/QUICK_REFERENCE.md` - Quick command reference
+- `nextflow/examples/` - Example configurations
+
+---
 
 ## 📊 Pipeline Modes
 
