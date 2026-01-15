@@ -14,9 +14,10 @@ include { UCSC_HUB                } from '../modules/local/ucsc_hub'
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { ATACSEQ                 } from '../workflows/subworkflows/atacseq'
-include { CHIPSEQ                 } from '../workflows/subworkflows/chipseq'
-include { CUTRUN                  } from '../workflows/subworkflows/cutrun'
+// TODO: Uncomment when nf-core modules are installed
+// include { ATACSEQ                 } from '../workflows/subworkflows/atacseq'
+// include { CHIPSEQ                 } from '../workflows/subworkflows/chipseq'
+// include { CUTRUN                  } from '../workflows/subworkflows/cutrun'
 
 /*
 ========================================================================================
@@ -27,9 +28,10 @@ include { CUTRUN                  } from '../workflows/subworkflows/cutrun'
 //
 // MODULE: Installed directly from nf-core/modules
 //
-include { FASTQC                  } from '../modules/nf-core/fastqc/main'
-include { MULTIQC                 } from '../modules/nf-core/multiqc/main'
-include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
+// TODO: Uncomment when nf-core modules are installed
+// include { FASTQC                  } from '../modules/nf-core/fastqc/main'
+// include { MULTIQC                 } from '../modules/nf-core/multiqc/main'
+// include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 
 /*
 ========================================================================================
@@ -142,14 +144,15 @@ workflow USEQ2TRACKS {
     //
     // MODULE: Run FastQC (unless in rapid mode)
     //
+    // TODO: Uncomment when FASTQC module is installed
     ch_fastqc_raw_multiqc = Channel.empty()
-    if (!params.rapid_mode && !params.skip_fastqc) {
-        FASTQC (
-            ch_reads
-        )
-        ch_fastqc_raw_multiqc = FASTQC.out.zip
-        ch_versions = ch_versions.mix(FASTQC.out.versions.first())
-    }
+    // if (!params.rapid_mode && !params.skip_fastqc) {
+    //     FASTQC (
+    //         ch_reads
+    //     )
+    //     ch_fastqc_raw_multiqc = FASTQC.out.zip
+    //     ch_versions = ch_versions.mix(FASTQC.out.versions.first())
+    // }
     
     //
     // Branch samples by assay type
@@ -177,78 +180,81 @@ workflow USEQ2TRACKS {
     //
     // SUBWORKFLOW: Process ATAC-seq samples
     //
-    ch_atacseq_results = Channel.empty()
-    ch_by_assay.atacseq.ifEmpty([])
-        .map { meta, reads -> 
-            log.info "Processing ATAC-seq sample: ${meta.id}"
-            [meta, reads]
-        }
-        .set { ch_atacseq_input }
-    
-    if (ch_atacseq_input) {
-        ATACSEQ (
-            ch_atacseq_input,
-            GENOME_PREP.out.bowtie2_index.collect().ifEmpty([]),
-            GENOME_PREP.out.bwa_index.collect().ifEmpty([]),
-            GENOME_PREP.out.fasta,
-            GENOME_PREP.out.fai,
-            params.atacseq.mapper
-        )
-        ch_all_bams     = ch_all_bams.mix(ATACSEQ.out.bam)
-        ch_all_peaks    = ch_all_peaks.mix(ATACSEQ.out.peaks)
-        ch_all_bigwigs  = ch_all_bigwigs.mix(ATACSEQ.out.bigwig)
-        ch_versions     = ch_versions.mix(ATACSEQ.out.versions)
-    }
+    // TODO: Uncomment when ATACSEQ subworkflow modules are installed
+    // ch_atacseq_results = Channel.empty()
+    // ch_by_assay.atacseq.ifEmpty([])
+    //     .map { meta, reads -> 
+    //         log.info "Processing ATAC-seq sample: ${meta.id}"
+    //         [meta, reads]
+    //     }
+    //     .set { ch_atacseq_input }
+    // 
+    // if (ch_atacseq_input) {
+    //     ATACSEQ (
+    //         ch_atacseq_input,
+    //         GENOME_PREP.out.bowtie2_index.collect().ifEmpty([]),
+    //         GENOME_PREP.out.bwa_index.collect().ifEmpty([]),
+    //         GENOME_PREP.out.fasta,
+    //         GENOME_PREP.out.fai,
+    //         params.atacseq.mapper
+    //     )
+    //     ch_all_bams     = ch_all_bams.mix(ATACSEQ.out.bam)
+    //     ch_all_peaks    = ch_all_peaks.mix(ATACSEQ.out.peaks)
+    //     ch_all_bigwigs  = ch_all_bigwigs.mix(ATACSEQ.out.bigwig)
+    //     ch_versions     = ch_versions.mix(ATACSEQ.out.versions)
+    // }
     
     //
     // SUBWORKFLOW: Process ChIP-seq samples
     //
-    ch_by_assay.chipseq.ifEmpty([])
-        .map { meta, reads -> 
-            log.info "Processing ChIP-seq sample: ${meta.id}"
-            [meta, reads]
-        }
-        .set { ch_chipseq_input }
-    
-    if (ch_chipseq_input) {
-        CHIPSEQ (
-            ch_chipseq_input,
-            GENOME_PREP.out.bowtie2_index.collect().ifEmpty([]),
-            GENOME_PREP.out.bwa_index.collect().ifEmpty([]),
-            GENOME_PREP.out.fasta,
-            GENOME_PREP.out.fai,
-            params.chipseq.mapper
-        )
-        ch_all_bams     = ch_all_bams.mix(CHIPSEQ.out.bam)
-        ch_all_peaks    = ch_all_peaks.mix(CHIPSEQ.out.peaks)
-        ch_all_bigwigs  = ch_all_bigwigs.mix(CHIPSEQ.out.bigwig)
-        ch_versions     = ch_versions.mix(CHIPSEQ.out.versions)
-    }
+    // TODO: Uncomment when CHIPSEQ subworkflow modules are installed
+    // ch_by_assay.chipseq.ifEmpty([])
+    //     .map { meta, reads -> 
+    //         log.info "Processing ChIP-seq sample: ${meta.id}"
+    //         [meta, reads]
+    //     }
+    //     .set { ch_chipseq_input }
+    // 
+    // if (ch_chipseq_input) {
+    //     CHIPSEQ (
+    //         ch_chipseq_input,
+    //         GENOME_PREP.out.bowtie2_index.collect().ifEmpty([]),
+    //         GENOME_PREP.out.bwa_index.collect().ifEmpty([]),
+    //         GENOME_PREP.out.fasta,
+    //         GENOME_PREP.out.fai,
+    //         params.chipseq.mapper
+    //     )
+    //     ch_all_bams     = ch_all_bams.mix(CHIPSEQ.out.bam)
+    //     ch_all_peaks    = ch_all_peaks.mix(CHIPSEQ.out.peaks)
+    //     ch_all_bigwigs  = ch_all_bigwigs.mix(CHIPSEQ.out.bigwig)
+    //     ch_versions     = ch_versions.mix(CHIPSEQ.out.versions)
+    // }
     
     //
     // SUBWORKFLOW: Process CUT&RUN samples
     //
-    ch_by_assay.cutrun.ifEmpty([])
-        .map { meta, reads -> 
-            log.info "Processing CUT&RUN sample: ${meta.id}"
-            [meta, reads]
-        }
-        .set { ch_cutrun_input }
-    
-    if (ch_cutrun_input) {
-        CUTRUN (
-            ch_cutrun_input,
-            GENOME_PREP.out.bowtie2_index.collect().ifEmpty([]),
-            GENOME_PREP.out.bwa_index.collect().ifEmpty([]),
-            GENOME_PREP.out.fasta,
-            GENOME_PREP.out.fai,
-            params.cutrun.mapper
-        )
-        ch_all_bams     = ch_all_bams.mix(CUTRUN.out.bam)
-        ch_all_peaks    = ch_all_peaks.mix(CUTRUN.out.peaks)
-        ch_all_bigwigs  = ch_all_bigwigs.mix(CUTRUN.out.bigwig)
-        ch_versions     = ch_versions.mix(CUTRUN.out.versions)
-    }
+    // TODO: Uncomment when CUTRUN subworkflow modules are installed
+    // ch_by_assay.cutrun.ifEmpty([])
+    //     .map { meta, reads -> 
+    //         log.info "Processing CUT&RUN sample: ${meta.id}"
+    //         [meta, reads]
+    //     }
+    //     .set { ch_cutrun_input }
+    // 
+    // if (ch_cutrun_input) {
+    //     CUTRUN (
+    //         ch_cutrun_input,
+    //         GENOME_PREP.out.bowtie2_index.collect().ifEmpty([]),
+    //         GENOME_PREP.out.bwa_index.collect().ifEmpty([]),
+    //         GENOME_PREP.out.fasta,
+    //         GENOME_PREP.out.fai,
+    //         params.cutrun.mapper
+    //     )
+    //     ch_all_bams     = ch_all_bams.mix(CUTRUN.out.bam)
+    //     ch_all_peaks    = ch_all_peaks.mix(CUTRUN.out.peaks)
+    //     ch_all_bigwigs  = ch_all_bigwigs.mix(CUTRUN.out.bigwig)
+    //     ch_versions     = ch_versions.mix(CUTRUN.out.versions)
+    // }
     
     // TODO: Add other assay type subworkflows (RNA-seq, WGS, etc.)
     
@@ -284,28 +290,30 @@ workflow USEQ2TRACKS {
     //
     // MODULE: Pipeline reporting
     //
-    CUSTOM_DUMPSOFTWAREVERSIONS (
-        ch_versions.unique().collectFile(name: 'collated_versions.yml')
-    )
+    // TODO: Uncomment when modules are installed
+    // CUSTOM_DUMPSOFTWAREVERSIONS (
+    //     ch_versions.unique().collectFile(name: 'collated_versions.yml')
+    // )
 
     //
     // MODULE: MultiQC
     //
-    if (!params.rapid_mode && !params.skip_multiqc) {
-        workflow_summary    = WorkflowUseq2tracks.paramsSummaryMultiqc(workflow, summary_params)
-        ch_workflow_summary = Channel.value(workflow_summary)
+    // TODO: Uncomment when MULTIQC module is installed
+    // if (!params.rapid_mode && !params.skip_multiqc) {
+    //     workflow_summary    = WorkflowUseq2tracks.paramsSummaryMultiqc(workflow, summary_params)
+    //     ch_workflow_summary = Channel.value(workflow_summary)
 
-        ch_multiqc_files = Channel.empty()
-        ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
-        ch_multiqc_files = ch_multiqc_files.mix(ch_fastqc_raw_multiqc.collect{it[1]}.ifEmpty([]))
-        ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
+    //     ch_multiqc_files = Channel.empty()
+    //     ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
+    //     ch_multiqc_files = ch_multiqc_files.mix(ch_fastqc_raw_multiqc.collect{it[1]}.ifEmpty([]))
+    //     ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
 
-        MULTIQC (
-            ch_multiqc_files.collect()
-        )
-        multiqc_report = MULTIQC.out.report.toList()
-        ch_versions    = ch_versions.mix(MULTIQC.out.versions)
-    }
+    //     MULTIQC (
+    //         ch_multiqc_files.collect()
+    //     )
+    //     multiqc_report = MULTIQC.out.report.toList()
+    //     ch_versions    = ch_versions.mix(MULTIQC.out.versions)
+    // }
 }
 
 /*
