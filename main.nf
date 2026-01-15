@@ -24,7 +24,7 @@ WorkflowMain.initialise(workflow, params, log)
 ========================================================================================
 */
 
-include { USEQ2TRACKS } from './workflows/useq2tracks'
+include { USEQ2TRACKS } from './nextflow/workflows/useq2tracks'
 
 //
 // WORKFLOW: Run main uSeq2Tracks analysis pipeline
