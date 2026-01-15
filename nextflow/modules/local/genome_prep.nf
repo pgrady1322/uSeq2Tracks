@@ -32,8 +32,12 @@ process GENOME_PREP {
                     params.ancientdna.mapper == 'bwa_mem'
     
     """
-    # Copy and prepare genome
-    cp $genome genome.fa
+    # Copy and prepare genome (decompress if needed)
+    if [[ $genome == *.gz ]]; then
+        gunzip -c $genome > genome.fa
+    else
+        cp $genome genome.fa
+    fi
     
     # Create FASTA index
     samtools faidx genome.fa
