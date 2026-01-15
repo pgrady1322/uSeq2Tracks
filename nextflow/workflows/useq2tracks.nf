@@ -1,38 +1,10 @@
 /*
 ========================================================================================
-    VALIDATE INPUTS
-========================================================================================
-*/
-
-def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
-
-// Validate input parameters
-WorkflowUseq2tracks.initialise(params, log)
-
-// Check mandatory parameters
-if (params.samplesheet) { 
-    ch_samplesheet = file(params.samplesheet) 
-} else { 
-    exit 1, 'Input samplesheet not specified!' 
-}
-
-if (params.genome) { 
-    ch_genome = file(params.genome) 
-} else { 
-    exit 1, 'Reference genome not specified!' 
-}
-
-if (!params.genome_id) {
-    exit 1, 'Genome ID not specified! Please provide a genome identifier (e.g., genome_id = "galGal6")'
-}
-
-/*
-========================================================================================
     CONFIG FILES
 ========================================================================================
 */
 
-ch_multiqc_config        = file("$projectDir/assets/multiqc_config.yaml", checkIfExists: true)
+ch_multiqc_config        = Channel.fromPath("$projectDir/assets/multiqc_config.yaml", checkIfExists: true)
 ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multiqc_config) : Channel.empty()
 
 /*
@@ -78,6 +50,26 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoft
 def multiqc_report = []
 
 workflow USEQ2TRACKS {
+
+    // Validate input parameters
+    WorkflowUseq2tracks.initialise(params, log)
+
+    // Check mandatory parameters
+    if (!params.samplesheet) { 
+        error 'Input samplesheet not specified! Use --samplesheet <path/to/samplesheet.csv>'
+    }
+
+    if (!params.genome) { 
+        error 'Reference genome not specified! Use --genome <path/to/genome.fa>'
+    }
+
+    if (!params.genome_id) {
+        error 'Genome ID not specified! Please provide a genome identifier with --genome_id <ID>'
+    }
+
+    def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
+    ch_samplesheet = file(params.samplesheet, checkIfExists: true)
+    ch_genome = file(params.genome, checkIfExists: true)
 
     ch_versions = Channel.empty()
 
