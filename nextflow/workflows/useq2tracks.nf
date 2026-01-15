@@ -1,14 +1,5 @@
 /*
 ========================================================================================
-    CONFIG FILES
-========================================================================================
-*/
-
-ch_multiqc_config        = Channel.fromPath("$projectDir/assets/multiqc_config.yaml", checkIfExists: true)
-ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multiqc_config) : Channel.empty()
-
-/*
-========================================================================================
     IMPORT LOCAL MODULES/SUBWORKFLOWS
 ========================================================================================
 */
@@ -70,6 +61,10 @@ workflow USEQ2TRACKS {
     def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
     ch_samplesheet = file(params.samplesheet, checkIfExists: true)
     ch_genome = file(params.genome, checkIfExists: true)
+
+    // Config files
+    ch_multiqc_config        = Channel.fromPath("$projectDir/assets/multiqc_config.yaml", checkIfExists: true)
+    ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multiqc_config) : Channel.empty()
 
     ch_versions = Channel.empty()
 
