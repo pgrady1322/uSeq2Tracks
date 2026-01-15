@@ -1,6 +1,6 @@
 process GENOME_PREP {
     tag "$genome_id"
-    label 'process_high'
+    label 'process_medium'
     
     conda (params.enable_conda ? "bioconda::bowtie2=2.4.5 bioconda::bwa=0.7.17 bioconda::samtools=1.16.1" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
