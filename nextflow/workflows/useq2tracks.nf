@@ -260,25 +260,23 @@ workflow USEQ2TRACKS {
     //
     // SUBWORKFLOW: Process RNA-seq samples
     //
-    ch_by_assay.rnaseq.ifEmpty([])
+    ch_by_assay.rnaseq
         .map { meta, reads -> 
             log.info "Processing RNA-seq sample: ${meta.id}"
             [meta, reads]
         }
         .set { ch_rnaseq_input }
     
-    if (ch_rnaseq_input) {
-        RNASEQ (
-            ch_rnaseq_input,
-            GENOME_PREP.out.hisat2_index.collect().ifEmpty([]),
-            GENOME_PREP.out.fasta,
-            GENOME_PREP.out.fai,
-            GENOME_PREP.out.sizes
-        )
-        ch_all_bams     = ch_all_bams.mix(RNASEQ.out.bam)
-        ch_all_bigwigs  = ch_all_bigwigs.mix(RNASEQ.out.bigwig)
-        ch_versions     = ch_versions.mix(RNASEQ.out.versions)
-    }
+    RNASEQ (
+        ch_rnaseq_input,
+        GENOME_PREP.out.hisat2_index.collect().ifEmpty([]),
+        GENOME_PREP.out.fasta,
+        GENOME_PREP.out.fai,
+        GENOME_PREP.out.sizes
+    )
+    ch_all_bams     = ch_all_bams.mix(RNASEQ.out.bam)
+    ch_all_bigwigs  = ch_all_bigwigs.mix(RNASEQ.out.bigwig)
+    ch_versions     = ch_versions.mix(RNASEQ.out.versions)
     
     // TODO: Add other assay type subworkflows (WGS, Nanopore, PacBio, Ancient DNA, etc.)
     
