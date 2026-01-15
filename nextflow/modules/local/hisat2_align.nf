@@ -1,6 +1,8 @@
 process HISAT2_ALIGN {
     tag "$meta.id"
     label 'process_medium'
+    
+    publishDir "${params.outdir}/${params.genome_id}/rnaseq/bam", mode: params.publish_dir_mode, pattern: "*.bam"
 
     conda (params.enable_conda ? "bioconda::hisat2=2.2.1 bioconda::samtools=1.16.1" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

@@ -1,6 +1,8 @@
 process SAMTOOLS_SORT_INDEX {
     tag "$meta.id"
     label 'process_medium'
+    
+    publishDir "${params.outdir}/${params.genome_id}/rnaseq/bam", mode: params.publish_dir_mode, pattern: "*.{bam,bai}"
 
     conda (params.enable_conda ? "bioconda::samtools=1.16.1" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

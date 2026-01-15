@@ -1,6 +1,8 @@
 process BIGWIG_GENERATE {
     tag "$meta.id"
     label 'process_medium'
+    
+    publishDir "${params.outdir}/${params.genome_id}/rnaseq/bigwig", mode: params.publish_dir_mode, pattern: "*.bw"
 
     conda (params.enable_conda ? "bioconda::deeptools=3.5.1" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
