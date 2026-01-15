@@ -14,6 +14,7 @@ include { UCSC_HUB                } from '../modules/local/ucsc_hub'
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
+include { RNASEQ                  } from '../workflows/subworkflows/rnaseq'
 // TODO: Uncomment when nf-core modules are installed
 // include { ATACSEQ                 } from '../workflows/subworkflows/atacseq'
 // include { CHIPSEQ                 } from '../workflows/subworkflows/chipseq'
@@ -256,7 +257,30 @@ workflow USEQ2TRACKS {
     //     ch_versions     = ch_versions.mix(CUTRUN.out.versions)
     // }
     
-    // TODO: Add other assay type subworkflows (RNA-seq, WGS, etc.)
+    //
+    // SUBWORKFLOW: Process RNA-seq samples
+    //
+    ch_by_assay.rnaseq.ifEmpty([])
+        .map { meta, reads -> 
+            log.info "Processing RNA-seq sample: ${meta.id}"
+            [meta, reads]
+        }
+        .set { ch_rnaseq_input }
+    
+    if (ch_rnaseq_input) {
+        RNASEQ (
+            ch_rnaseq_input,
+            GENOME_PREP.out.hisat2_index.collect().ifEmpty([]),
+            GENOME_PREP.out.fasta,
+            GENOME_PREP.out.fai,
+            GENOME_PREP.out.sizes
+        )
+        ch_all_bams     = ch_all_bams.mix(RNASEQ.out.bam)
+        ch_all_bigwigs  = ch_all_bigwigs.mix(RNASEQ.out.bigwig)
+        ch_versions     = ch_versions.mix(RNASEQ.out.versions)
+    }
+    
+    // TODO: Add other assay type subworkflows (WGS, Nanopore, PacBio, Ancient DNA, etc.)
     
     //
     // MODULE: Generate UCSC track hub
