@@ -15,8 +15,8 @@ process BIGWIG_GENERATE {
     path sizes
 
     output:
-    tuple val(meta), path("*.bigWig"), emit: bigwig
-    path "versions.yml"              , emit: versions
+    tuple val(meta), path("*.bw"), emit: bigwig
+    path "versions.yml"          , emit: versions
 
     script:
     def prefix = "${meta.id}"
@@ -25,7 +25,7 @@ process BIGWIG_GENERATE {
     """
     bamCoverage \\
         -b $bam \\
-        -o ${prefix}.bigWig \\
+        -o ${prefix}.bw \\
         --binSize 10 \\
         --normalizeUsing $norm_method \\
         --numberOfProcessors ${task.cpus}
