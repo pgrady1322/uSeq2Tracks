@@ -63,5 +63,8 @@ class WorkflowMain {
             log.error "Please provide a genome identifier with --genome_id (e.g., 'galGal6')"
             System.exit(1)
         }
+
+        // Print workflow info - this runs after validation passes
+        log.info "${workflow.manifest.name} ${workflow.manifest.version}"
     }
 }
