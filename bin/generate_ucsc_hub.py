@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-Generate UCSC track hub files for uSeq2Tracks pipeline
+uSeq2Tracks v1.0.0
+
+UCSC Genome Browser track hub generator.
+
+Author: Patrick Grady
+Anthropic Claude Opus 4.6 used for code formatting and cleanup assistance.
+License: MIT License - See LICENSE
 """
 
 import sys
@@ -124,3 +131,6 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
+# uSeq2Tracks v1.0.0
+# Any usage is subject to this software's license.
