@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 uSeq2Tracks – Samplesheet Validator
 
@@ -24,8 +23,14 @@ logger = logging.getLogger(__name__)
 
 # ── Shared constants ──────────────────────────────────────────────
 VALID_ASSAY_TYPES: list[str] = [
-    "atacseq", "chipseq", "cutrun", "rnaseq",
-    "wgs", "nanopore", "pacbio", "ancientdna",
+    "atacseq",
+    "chipseq",
+    "cutrun",
+    "rnaseq",
+    "wgs",
+    "nanopore",
+    "pacbio",
+    "ancientdna",
 ]
 
 INVALID_SENTINELS: set[str] = frozenset(
@@ -76,7 +81,7 @@ def check_samplesheet(samplesheet_path: Path, output_path: Path) -> int:
     seen_ids: set[str] = set()
     samples: list[dict[str, str]] = []
 
-    with open(samplesheet_path, "r", encoding="utf-8") as fh:
+    with open(samplesheet_path, encoding="utf-8") as fh:
         reader = csv.DictReader(fh)
 
         if reader.fieldnames is None:
@@ -85,22 +90,16 @@ def check_samplesheet(samplesheet_path: Path, output_path: Path) -> int:
         # Check required columns
         missing = [c for c in required_cols if c not in reader.fieldnames]
         if missing:
-            raise SamplesheetError(
-                f"Missing required columns: {', '.join(missing)}"
-            )
+            raise SamplesheetError(f"Missing required columns: {', '.join(missing)}")
 
         for lineno, row in enumerate(reader, start=2):
             # -- sample_id --
             if not is_valid_value(row.get("sample_id")):
-                raise SamplesheetError(
-                    f"Line {lineno}: sample_id is empty or invalid"
-                )
+                raise SamplesheetError(f"Line {lineno}: sample_id is empty or invalid")
             sample_id = row["sample_id"].strip()
 
             if sample_id in seen_ids:
-                raise SamplesheetError(
-                    f"Line {lineno}: Duplicate sample_id '{sample_id}'"
-                )
+                raise SamplesheetError(f"Line {lineno}: Duplicate sample_id '{sample_id}'")
             seen_ids.add(sample_id)
 
             # -- assay type --
@@ -163,9 +162,7 @@ def parse_args(args: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("samplesheet", type=Path, help="Input samplesheet CSV")
     parser.add_argument("output", type=Path, help="Output validated samplesheet")
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Enable debug logging"
-    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="Enable debug logging")
     return parser.parse_args(args)
 
 

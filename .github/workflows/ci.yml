@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "dev/**"]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff format --check bin/ tests/
+      - run: ruff check bin/ tests/
+
+  test:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install pytest pytest-cov
+      - run: pytest --tb=short -v
+      - run: pytest --cov=bin --cov-report=term-missing --cov-fail-under=80
+
+  snakemake-lint:
+    name: Snakemake Lint
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install snakemake pandas
+      - run: snakemake --lint -s Snakefile --configfile config.yaml 2>&1 || true
+        # --lint is advisory; we capture output but don't fail the build yet

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 uSeq2Tracks – UCSC Genome Browser Track Hub Generator
 
@@ -20,9 +19,9 @@ logger = logging.getLogger(__name__)
 
 # ── Constants ─────────────────────────────────────────────────────
 TRACK_COLORS: list[str] = [
-    "200,0,0",    # red
-    "0,150,0",    # green
-    "0,0,200",    # blue
+    "200,0,0",  # red
+    "0,150,0",  # green
+    "0,0,200",  # blue
     "150,100,0",  # olive
     "100,0,150",  # purple
     "200,100,0",  # orange
@@ -114,9 +113,7 @@ def write_trackdb_txt(args: argparse.Namespace, output_dir: Path) -> None:
         if sample_id in samples:
             samples[sample_id]["peaks"] = peak
         else:
-            logger.warning(
-                "Peak file '%s' has no matching bigwig — skipping", peak.name
-            )
+            logger.warning("Peak file '%s' has no matching bigwig — skipping", peak.name)
 
     trackdb_file = output_dir / "trackDb.txt"
     with open(trackdb_file, "w", encoding="utf-8") as fh:
@@ -134,22 +131,22 @@ def write_trackdb_txt(args: argparse.Namespace, output_dir: Path) -> None:
             if "bigwig" in files:
                 rel_path = f"../bigwig/{files['bigwig'].name}"
                 fh.write(f"    track {sample_id}_signal\n")
-                fh.write(f"    parent all_samples\n")
+                fh.write("    parent all_samples\n")
                 fh.write(f"    bigDataUrl {rel_path}\n")
                 fh.write(f"    shortLabel {sample_id}\n")
                 fh.write(f"    longLabel {sample_id} Signal Track\n")
-                fh.write(f"    type bigWig\n")
+                fh.write("    type bigWig\n")
                 fh.write(f"    color {color}\n")
-                fh.write(f"    autoScale on\n\n")
+                fh.write("    autoScale on\n\n")
 
             if "peaks" in files:
                 rel_path = f"../peaks/{files['peaks'].name}"
                 fh.write(f"    track {sample_id}_peaks\n")
-                fh.write(f"    parent all_samples\n")
+                fh.write("    parent all_samples\n")
                 fh.write(f"    bigDataUrl {rel_path}\n")
                 fh.write(f"    shortLabel {sample_id} Peaks\n")
                 fh.write(f"    longLabel {sample_id} Peak Calls\n")
-                fh.write(f"    type narrowPeak\n")
+                fh.write("    type narrowPeak\n")
                 fh.write(f"    color {color}\n\n")
 
     logger.info("Created %s with %d samples", trackdb_file, len(samples))

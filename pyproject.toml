@@ -1,0 +1,52 @@
+# ============================================================
+# uSeq2Tracks – project metadata & tool config
+# ============================================================
+# This is NOT a pip-installable package (it's a Snakemake pipeline).
+# pyproject.toml is used here solely for tool configuration (ruff,
+# pytest, mypy) and CI convenience.
+
+[project]
+name = "useq2tracks"
+version = "0.5.0"
+description = "Universal Sequencing-to-Genome-Browser-Tracks Pipeline"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "Patrick Grady" }]
+readme = "README.md"
+
+# ── Ruff ──────────────────────────────────────────────────────
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+src = ["bin", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "SIM108", # ternary operator suggestion
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["bin"]
+
+# ── Pytest ────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-v --tb=short"
+
+# ── MyPy ──────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
