@@ -13,7 +13,6 @@ License: MIT License - See LICENSE
 import sys
 import argparse
 from pathlib import Path
-import json
 
 
 def parse_args(args=None):
@@ -36,11 +35,11 @@ def write_hub_txt(args, output_dir):
     """Write hub.txt file"""
     hub_file = output_dir / "hub.txt"
     with open(hub_file, 'w') as f:
-        f.write(f"hub {args.hub_name}\\n")
-        f.write(f"shortLabel {args.hub_short_label}\\n")
-        f.write(f"longLabel {args.hub_long_label}\\n")
-        f.write(f"genomesFile genomes.txt\\n")
-        f.write(f"email {args.hub_email}\\n")
+        f.write(f"hub {args.hub_name}\n")
+        f.write(f"shortLabel {args.hub_short_label}\n")
+        f.write(f"longLabel {args.hub_long_label}\n")
+        f.write(f"genomesFile genomes.txt\n")
+        f.write(f"email {args.hub_email}\n")
     print(f"✓ Created {hub_file}")
 
 
@@ -48,8 +47,8 @@ def write_genomes_txt(args, output_dir):
     """Write genomes.txt file"""
     genomes_file = output_dir / "genomes.txt"
     with open(genomes_file, 'w') as f:
-        f.write(f"genome {args.genome_name}\\n")
-        f.write(f"trackDb trackDb.txt\\n")
+        f.write(f"genome {args.genome_name}\n")
+        f.write(f"trackDb trackDb.txt\n")
     print(f"✓ Created {genomes_file}")
 
 
@@ -76,13 +75,13 @@ def write_trackdb_txt(args, output_dir):
     
     with open(trackdb_file, 'w') as f:
         # Create a composite track for all samples
-        f.write("track all_samples\\n")
-        f.write("compositeTrack on\\n")
-        f.write("shortLabel All Tracks\\n")
-        f.write("longLabel All uSeq2Tracks Signal and Peak Tracks\\n")
-        f.write("type bigWig\\n")
-        f.write("visibility full\\n")
-        f.write("\\n")
+        f.write("track all_samples\n")
+        f.write("compositeTrack on\n")
+        f.write("shortLabel All Tracks\n")
+        f.write("longLabel All uSeq2Tracks Signal and Peak Tracks\n")
+        f.write("type bigWig\n")
+        f.write("visibility full\n")
+        f.write("\n")
         
         # Individual BigWig tracks
         colors = ["200,0,0", "0,150,0", "0,0,200", "150,100,0", "100,0,150", "200,100,0", "0,200,100"]
@@ -92,27 +91,27 @@ def write_trackdb_txt(args, output_dir):
             # BigWig track
             if 'bigwig' in files:
                 rel_path = f"../bigwig/{files['bigwig'].name}"
-                f.write(f"    track {sample_id}_signal\\n")
-                f.write(f"    parent all_samples\\n")
-                f.write(f"    bigDataUrl {rel_path}\\n")
-                f.write(f"    shortLabel {sample_id}\\n")
-                f.write(f"    longLabel {sample_id} Signal Track\\n")
-                f.write(f"    type bigWig\\n")
-                f.write(f"    color {color}\\n")
-                f.write(f"    autoScale on\\n")
-                f.write("\\n")
+                f.write(f"    track {sample_id}_signal\n")
+                f.write(f"    parent all_samples\n")
+                f.write(f"    bigDataUrl {rel_path}\n")
+                f.write(f"    shortLabel {sample_id}\n")
+                f.write(f"    longLabel {sample_id} Signal Track\n")
+                f.write(f"    type bigWig\n")
+                f.write(f"    color {color}\n")
+                f.write(f"    autoScale on\n")
+                f.write("\n")
             
             # Peak track (if available)
             if 'peaks' in files:
                 rel_path = f"../peaks/{files['peaks'].name}"
-                f.write(f"    track {sample_id}_peaks\\n")
-                f.write(f"    parent all_samples\\n")
-                f.write(f"    bigDataUrl {rel_path}\\n")
-                f.write(f"    shortLabel {sample_id} Peaks\\n")
-                f.write(f"    longLabel {sample_id} Peak Calls\\n")
-                f.write(f"    type narrowPeak\\n")
-                f.write(f"    color {color}\\n")
-                f.write("\\n")
+                f.write(f"    track {sample_id}_peaks\n")
+                f.write(f"    parent all_samples\n")
+                f.write(f"    bigDataUrl {rel_path}\n")
+                f.write(f"    shortLabel {sample_id} Peaks\n")
+                f.write(f"    longLabel {sample_id} Peak Calls\n")
+                f.write(f"    type narrowPeak\n")
+                f.write(f"    color {color}\n")
+                f.write("\n")
     
     print(f"✓ Created {trackdb_file} with {len(samples)} samples")
 
@@ -126,7 +125,7 @@ def main(args=None):
     write_genomes_txt(args, output_dir)
     write_trackdb_txt(args, output_dir)
     
-    print("\\n✓ UCSC track hub generation complete!")
+    print("\n✓ UCSC track hub generation complete!")
 
 
 if __name__ == '__main__':

@@ -1,4 +1,22 @@
+# ── Workflow engine artifacts ──
 work/
 results/
 .nextflow/
 .nextflow.log*
+.snakemake/
+
+# ── Python ──
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.cache/
+
+# ── Data (downloaded/generated) ──
+data/raw/
+
+# ── OS / IDE ──
+.DS_Store
+.vscode/
+*.swp
+*.swo

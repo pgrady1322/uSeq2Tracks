@@ -17,20 +17,20 @@ def get_parameter_sweep_outputs():
     if ATACSEQ_SAMPLES:
         for sample in ATACSEQ_SAMPLES:
             for qval in qval_strings:
-                outputs.append(f"{config['outdir']}/atacseq/peaks_sweep/{sample}_q{qval}_peaks.narrowPeak")
+                outputs.append(f"{GENOME_OUTDIR}/atacseq/peaks_sweep/{sample}_q{qval}_peaks.narrowPeak")
     
     # CUT&RUN parameter sweep outputs (excluding control samples)
     if CUTRUN_SAMPLES:
         cutrun_peak_samples = [s for s in CUTRUN_SAMPLES if not any(keyword in s.lower() for keyword in ['igg', 'input', 'control'])]
         for sample in cutrun_peak_samples:
             for qval in qval_strings:
-                outputs.append(f"{config['outdir']}/cutrun/peaks_sweep/{sample}_q{qval}_peaks.narrowPeak")
+                outputs.append(f"{GENOME_OUTDIR}/cutrun/peaks_sweep/{sample}_q{qval}_peaks.narrowPeak")
     
     # ChIP-seq parameter sweep outputs
     if CHIPSEQ_SAMPLES:
         for sample in CHIPSEQ_SAMPLES:
             for qval in qval_strings:
-                outputs.append(f"{config['outdir']}/chipseq/peaks_sweep/{sample}_q{qval}_peaks.narrowPeak")
+                outputs.append(f"{GENOME_OUTDIR}/chipseq/peaks_sweep/{sample}_q{qval}_peaks.narrowPeak")
     
     return outputs
 
@@ -57,7 +57,7 @@ rule parameter_sweep_summary:
     input:
         get_parameter_sweep_outputs()
     output:
-        f"{config['outdir']}/parameter_sweep/summary_report.txt"
+        f"{GENOME_OUTDIR}/parameter_sweep/summary_report.txt"
     params:
         qvalues = config.get('parameter_sweep', {}).get('qvalues', [0.05, 0.01, 0.005, 0.001])
     run:
@@ -111,6 +111,6 @@ rule parameter_sweep_summary:
 # Rule to run only parameter sweep analysis
 rule parameter_sweep:
     input:
-        get_parameter_sweep_outputs() + [f"{config['outdir']}/parameter_sweep/summary_report.txt"]
+        get_parameter_sweep_outputs() + [f"{GENOME_OUTDIR}/parameter_sweep/summary_report.txt"]
     message:
         "Parameter sweep analysis complete"

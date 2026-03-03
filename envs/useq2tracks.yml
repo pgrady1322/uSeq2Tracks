@@ -1,0 +1,52 @@
+# ═══════════════════════════════════════════════════════════════════════
+# uSeq2Tracks — Conda Environment
+# ═══════════════════════════════════════════════════════════════════════
+# Install with: mamba env create -f envs/useq2tracks.yml
+#               conda activate useq2tracks
+
+name: useq2tracks
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - python>=3.10
+
+  # ── Workflow engines ──
+  - snakemake>=7.0
+  - nextflow>=21.10.3
+
+  # ── Alignment / mapping ──
+  - bowtie2>=2.5
+  - bwa-mem2>=2.2
+  - minimap2>=2.24
+  - star>=2.7
+
+  # ── SAM/BAM tools ──
+  - samtools>=1.17
+  - bcftools>=1.17
+
+  # ── Peak calling ──
+  - macs3>=3.0
+
+  # ── Track generation ──
+  - deeptools>=3.5
+  - ucsc-bedgraphtobigwig
+  - ucsc-bedtobigbed
+
+  # ── QC ──
+  - fastqc>=0.12
+  - multiqc>=1.14
+  - fastp>=0.23
+
+  # ── SRA download ──
+  - sra-tools>=3.0
+
+  # ── Python packages ──
+  - pandas>=1.5
+  - pyyaml>=6.0
+
+  # ── Optional: long-read QC ──
+  - nanostat>=1.6
+  - nanoplot>=1.41

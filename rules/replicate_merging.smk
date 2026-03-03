@@ -28,12 +28,12 @@ def get_merge_inputs(wildcards):
     samples = EXPERIMENT_GROUPS[assay][experiment][group]
     print(f"DEBUG: Found samples for {assay}/{experiment}/{group}: {samples}")
     
-    return expand(f"{config['outdir']}/{assay}/bigwig/{{sample}}.bw", sample=samples)
+    return expand(f"{GENOME_OUTDIR}/{assay}/bigwig/{{sample}}.bw", sample=samples)
 
 # Debug rule to inspect experiment groups structure
 rule debug_experiment_groups:
     output:
-        f"{config['outdir']}/debug/experiment_groups.txt"
+        f"{GENOME_OUTDIR}/debug/experiment_groups.txt"
     params:
     run:
         import os
@@ -60,7 +60,7 @@ rule debug_experiment_groups:
             if 'atacseq' in EXPERIMENT_GROUPS:
                 for exp in EXPERIMENT_GROUPS['atacseq'].keys():
                     for group in EXPERIMENT_GROUPS['atacseq'][exp].keys():
-                        merged_path = f"{config['outdir']}/atacseq/bigwig_merged/{exp}.{group}_merged.bw"
+                        merged_path = f"{GENOME_OUTDIR}/atacseq/bigwig_merged/{exp}.{group}_merged.bw"
                         f.write(f"  {merged_path}\n")
 
 # Merge BigWig files for replicate groups using deepTools (within experiment groups)
@@ -68,7 +68,7 @@ rule merge_replicate_bigwigs:
     input:
         lambda wildcards: get_merge_inputs(wildcards)
     output:
-        f"{config['outdir']}/{{assay}}/bigwig_merged/{{experiment}}.{{group}}_merged.bw"
+        f"{GENOME_OUTDIR}/{{assay}}/bigwig_merged/{{experiment}}.{{group}}_merged.bw"
     params:
         input_list=lambda wildcards, input: ' '.join(input),
         genome_sizes=f"{GENOME_OUTDIR}/genome/genome.sizes"
@@ -145,11 +145,11 @@ os.unlink(temp_bg.name)
 # Create merged BAM files for replicates (useful for peak calling, within experiment groups)
 rule merge_replicate_bams:
     input:
-        lambda wildcards: expand(f"{config['outdir']}/{{assay}}/bam/{{sample}}.sorted.bam", 
+        lambda wildcards: expand(f"{GENOME_OUTDIR}/{{assay}}/bam/{{sample}}.sorted.bam", 
                                 sample=EXPERIMENT_GROUPS[wildcards.assay][wildcards.experiment][wildcards.group])
     output:
-        bam = f"{config['outdir']}/{{assay}}/bam_merged/{{experiment}}_{{group}}_merged.bam",
-        bai = f"{config['outdir']}/{{assay}}/bam_merged/{{experiment}}_{{group}}_merged.bam.bai"
+        bam = f"{GENOME_OUTDIR}/{{assay}}/bam_merged/{{experiment}}_{{group}}_merged.bam",
+        bai = f"{GENOME_OUTDIR}/{{assay}}/bam_merged/{{experiment}}_{{group}}_merged.bam.bai"
     params:
     threads: 4
     shell:
@@ -162,14 +162,14 @@ rule merge_replicate_bams:
 # Enhanced peak calling on merged replicates for ATAC-seq (experiment-aware)
 rule atacseq_merged_peaks:
     input:
-        treatment = f"{config['outdir']}/atacseq/bam_merged/{{experiment}}_treatment_merged.bam",
-        control = f"{config['outdir']}/atacseq/bam_merged/{{experiment}}_input_merged.bam" 
+        treatment = f"{GENOME_OUTDIR}/atacseq/bam_merged/{{experiment}}_treatment_merged.bam",
+        control = f"{GENOME_OUTDIR}/atacseq/bam_merged/{{experiment}}_input_merged.bam" 
     output:
-        narrowpeak = f"{config['outdir']}/atacseq/peaks_merged/{{experiment}}_treatment_vs_input_peaks.narrowPeak",
-        summits = f"{config['outdir']}/atacseq/peaks_merged/{{experiment}}_treatment_vs_input_summits.bed"
+        narrowpeak = f"{GENOME_OUTDIR}/atacseq/peaks_merged/{{experiment}}_treatment_vs_input_peaks.narrowPeak",
+        summits = f"{GENOME_OUTDIR}/atacseq/peaks_merged/{{experiment}}_treatment_vs_input_summits.bed"
     params:
         name = "{experiment}_treatment_vs_input",
-        outdir = f"{config['outdir']}/atacseq/peaks_merged",
+        outdir = f"{GENOME_OUTDIR}/atacseq/peaks_merged",
         shift = config['atacseq']['shift'],
         extsize = config['atacseq']['extsize'],
         macs3_opts = config['atacseq']['macs3_opts']
@@ -187,12 +187,12 @@ rule atacseq_merged_peaks:
 rule create_composite_tracks:
     input:
         # Ensure all merged BigWigs exist for all experiments - but only if we have valid experiment groups
-        atacseq_merged = [f"{config['outdir']}/atacseq/bigwig_merged/{exp}.{group}_merged.bw" 
+        atacseq_merged = [f"{GENOME_OUTDIR}/atacseq/bigwig_merged/{exp}.{group}_merged.bw" 
                          for exp in EXPERIMENT_GROUPS.get('atacseq', {}).keys()
                          for group in EXPERIMENT_GROUPS.get('atacseq', {}).get(exp, {}).keys() 
                          if exp and group] if 'atacseq' in EXPERIMENT_GROUPS and EXPERIMENT_GROUPS['atacseq'] else []
     output:
-        f"{config['outdir']}/ucsc/composite_trackDb.txt"
+        f"{GENOME_OUTDIR}/ucsc/composite_trackDb.txt"
     params:
     run:
         with open(output[0], 'w') as f:

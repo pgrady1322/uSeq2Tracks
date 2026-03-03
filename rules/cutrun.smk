@@ -29,7 +29,7 @@ rule cutrun_map_bowtie2:
         unpack(get_input_reads_cutrun),
         idx = f"{GENOME_OUTDIR}/genome/bowtie2/genome.1.bt2"
     output:
-        f"{config['outdir']}/cutrun/bam/{{sample}}.raw.bam"
+        f"{GENOME_OUTDIR}/cutrun/bam/{{sample}}.raw.bam"
     params:
         bowtie2_opts = config.get('cutrun', {}).get('bowtie2_opts', '--very-sensitive'),
         genome_prefix = f"{GENOME_OUTDIR}/genome/bowtie2/genome"
@@ -61,7 +61,7 @@ rule cutrun_map_bwa_mem2:
         unpack(get_input_reads_cutrun),
         idx = f"{GENOME_OUTDIR}/genome/bwa_mem2/genome.bwt.2bit.64"
     output:
-        f"{config['outdir']}/cutrun/bam/{{sample}}.raw.bam"
+        f"{GENOME_OUTDIR}/cutrun/bam/{{sample}}.raw.bam"
     params:
         bwa_mem2_opts = config.get('cutrun', {}).get('bwa_mem2_opts', '-M'),
         genome_prefix = f"{GENOME_OUTDIR}/genome/bwa_mem2/genome"
@@ -90,10 +90,10 @@ rule cutrun_map_bwa_mem2:
 # Sort and index CUT&RUN BAM files
 rule cutrun_sort_and_index:
     input:
-        f"{config['outdir']}/cutrun/bam/{{sample}}.raw.bam"
+        f"{GENOME_OUTDIR}/cutrun/bam/{{sample}}.raw.bam"
     output:
-        bam = f"{config['outdir']}/cutrun/bam/{{sample}}.sorted.bam",
-        bai = f"{config['outdir']}/cutrun/bam/{{sample}}.sorted.bam.bai"
+        bam = f"{GENOME_OUTDIR}/cutrun/bam/{{sample}}.sorted.bam",
+        bai = f"{GENOME_OUTDIR}/cutrun/bam/{{sample}}.sorted.bam.bai"
     params:
     threads: config.get('cutrun', {}).get('threads', config['resources']['mapping_threads'])
     resources:
@@ -120,10 +120,10 @@ rule cutrun_sort_and_index:
 # Mark duplicates in CUT&RUN BAM files
 rule cutrun_markdup:
     input:
-        f"{config['outdir']}/cutrun/bam/{{sample}}.sorted.bam"
+        f"{GENOME_OUTDIR}/cutrun/bam/{{sample}}.sorted.bam"
     output:
-        bam = f"{config['outdir']}/cutrun/bam/{{sample}}.dedup.bam",
-        metrics = f"{config['outdir']}/cutrun/qc/{{sample}}.markdup.metrics"
+        bam = f"{GENOME_OUTDIR}/cutrun/bam/{{sample}}.dedup.bam",
+        metrics = f"{GENOME_OUTDIR}/cutrun/qc/{{sample}}.markdup.metrics"
     threads: config.get('cutrun', {}).get('threads', config['resources']['mapping_threads'])
     shell:
         """
@@ -136,16 +136,16 @@ rule cutrun_markdup:
 # Call peaks with MACS3 for CUT&RUN
 rule cutrun_call_peaks:
     input:
-        f"{config['outdir']}/cutrun/bam/{{sample}}.dedup.bam" if config.get('cutrun', {}).get('markdup', True) else f"{config['outdir']}/cutrun/bam/{{sample}}.sorted.bam"
+        f"{GENOME_OUTDIR}/cutrun/bam/{{sample}}.dedup.bam" if config.get('cutrun', {}).get('markdup', True) else f"{GENOME_OUTDIR}/cutrun/bam/{{sample}}.sorted.bam"
     output:
-        f"{config['outdir']}/cutrun/peaks/{{sample}}_peaks.narrowPeak"
+        f"{GENOME_OUTDIR}/cutrun/peaks/{{sample}}_peaks.narrowPeak"
     wildcard_constraints:
         sample="(?!.*(?:igg|input|control)).*"
     params:
         shift = config.get('cutrun', {}).get('shift', 0),
         extsize = config.get('cutrun', {}).get('extsize', 160),
         macs3_opts = config.get('cutrun', {}).get('macs3_opts', '--qval 0.05'),
-        outdir = f"{config['outdir']}/cutrun/peaks",
+        outdir = f"{GENOME_OUTDIR}/cutrun/peaks",
         prefix = "{sample}"
     shell:
         """
@@ -171,15 +171,15 @@ rule cutrun_call_peaks:
 # Parameter sweep: Call peaks with multiple q-values for CUT&RUN
 rule cutrun_call_peaks_sweep:
     input:
-        f"{config['outdir']}/cutrun/bam/{{sample}}.dedup.bam" if config.get('cutrun', {}).get('markdup', True) else f"{config['outdir']}/cutrun/bam/{{sample}}.sorted.bam"
+        f"{GENOME_OUTDIR}/cutrun/bam/{{sample}}.dedup.bam" if config.get('cutrun', {}).get('markdup', True) else f"{GENOME_OUTDIR}/cutrun/bam/{{sample}}.sorted.bam"
     output:
-        f"{config['outdir']}/cutrun/peaks_sweep/{{sample}}_q{{qval}}_peaks.narrowPeak"
+        f"{GENOME_OUTDIR}/cutrun/peaks_sweep/{{sample}}_q{{qval}}_peaks.narrowPeak"
     wildcard_constraints:
         sample="(?!.*(?:igg|input|control)).*"
     params:
         shift = config.get('cutrun', {}).get('shift', 0),
         extsize = config.get('cutrun', {}).get('extsize', 160),
-        outdir = f"{config['outdir']}/cutrun/peaks_sweep",
+        outdir = f"{GENOME_OUTDIR}/cutrun/peaks_sweep",
         prefix = "{sample}_q{qval}",
         qval = "{qval}"
     shell:
@@ -207,10 +207,10 @@ rule cutrun_call_peaks_sweep:
 # Convert CUT&RUN BAM to BigWig for visualization
 rule cutrun_bam_to_bigwig:
     input:
-        bam = f"{config['outdir']}/cutrun/bam/{{sample}}.dedup.bam" if config.get('cutrun', {}).get('markdup', True) else f"{config['outdir']}/cutrun/bam/{{sample}}.sorted.bam",
+        bam = f"{GENOME_OUTDIR}/cutrun/bam/{{sample}}.dedup.bam" if config.get('cutrun', {}).get('markdup', True) else f"{GENOME_OUTDIR}/cutrun/bam/{{sample}}.sorted.bam",
         fai = f"{GENOME_OUTDIR}/genome/genome.fa.fai"
     output:
-        f"{config['outdir']}/cutrun/bigwig/{{sample}}.bw"
+        f"{GENOME_OUTDIR}/cutrun/bigwig/{{sample}}.bw"
     params:
         normalize = config.get('cutrun', {}).get('bw_norm', 'CPM')
     threads: config.get('cutrun', {}).get('threads', config['resources']['mapping_threads'])
@@ -225,11 +225,11 @@ rule cutrun_bam_to_bigwig:
 # CUT&RUN quality control profile around genes (optional)
 rule cutrun_profile_qc:
     input:
-        bam = f"{config['outdir']}/cutrun/bam/{{sample}}.dedup.bam" if config.get('cutrun', {}).get('markdup', True) else f"{config['outdir']}/cutrun/bam/{{sample}}.sorted.bam",
+        bam = f"{GENOME_OUTDIR}/cutrun/bam/{{sample}}.dedup.bam" if config.get('cutrun', {}).get('markdup', True) else f"{GENOME_OUTDIR}/cutrun/bam/{{sample}}.sorted.bam",
         gff = config.get('cutrun', {}).get('qc', {}).get('gff', '')
     output:
-        profile = f"{config['outdir']}/cutrun/qc/{{sample}}_gene_profile.{config.get('cutrun', {}).get('qc', {}).get('plot_format', 'png')}",
-        matrix = f"{config['outdir']}/cutrun/qc/{{sample}}_gene_profile.gz"
+        profile = f"{GENOME_OUTDIR}/cutrun/qc/{{sample}}_gene_profile.{config.get('cutrun', {}).get('qc', {}).get('plot_format', 'png')}",
+        matrix = f"{GENOME_OUTDIR}/cutrun/qc/{{sample}}_gene_profile.gz"
     params:
         upstream = config.get('cutrun', {}).get('qc', {}).get('upstream', 2000),
         downstream = config.get('cutrun', {}).get('qc', {}).get('downstream', 2000),
@@ -254,9 +254,9 @@ rule cutrun_profile_qc:
 # Complete CUT&RUN pipeline marker
 rule cutrun_complete:
     input:
-        expand(f"{config['outdir']}/cutrun/bam/{{sample}}.dedup.bam", sample=CUTRUN_SAMPLES) if config.get('cutrun', {}).get('markdup', True) else expand(f"{config['outdir']}/cutrun/bam/{{sample}}.sorted.bam", sample=CUTRUN_SAMPLES),
-        expand(f"{config['outdir']}/cutrun/bigwig/{{sample}}.bw", sample=CUTRUN_SAMPLES),
-        expand(f"{config['outdir']}/cutrun/peaks/{{sample}}_peaks.narrowPeak", sample=get_cutrun_peak_samples())
+        expand(f"{GENOME_OUTDIR}/cutrun/bam/{{sample}}.dedup.bam", sample=CUTRUN_SAMPLES) if config.get('cutrun', {}).get('markdup', True) else expand(f"{GENOME_OUTDIR}/cutrun/bam/{{sample}}.sorted.bam", sample=CUTRUN_SAMPLES),
+        expand(f"{GENOME_OUTDIR}/cutrun/bigwig/{{sample}}.bw", sample=CUTRUN_SAMPLES),
+        expand(f"{GENOME_OUTDIR}/cutrun/peaks/{{sample}}_peaks.narrowPeak", sample=get_cutrun_peak_samples())
     output:
         f"{GENOME_OUTDIR}/cutrun/tracks_complete.txt"
     params:

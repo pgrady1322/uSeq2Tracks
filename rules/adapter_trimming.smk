@@ -8,10 +8,10 @@ rule trim_adapters:
     input:
         unpack(get_sample_reads)
     output:
-        r1=f"{config['outdir']}/trimmed/{{sample}}_R1_trimmed.fastq.gz",
-        r2=f"{config['outdir']}/trimmed/{{sample}}_R2_trimmed.fastq.gz",
-        json=f"{config['outdir']}/qc/trimming/{{sample}}_fastp_trim.json",
-        html=f"{config['outdir']}/qc/trimming/{{sample}}_fastp_trim.html"
+        r1=f"{GENOME_OUTDIR}/trimmed/{{sample}}_R1_trimmed.fastq.gz",
+        r2=f"{GENOME_OUTDIR}/trimmed/{{sample}}_R2_trimmed.fastq.gz",
+        json=f"{GENOME_OUTDIR}/qc/trimming/{{sample}}_fastp_trim.json",
+        html=f"{GENOME_OUTDIR}/qc/trimming/{{sample}}_fastp_trim.html"
     params:
         # Adapter trimming options from config
         min_length = config.get('adapter_trimming', {}).get('min_length', 20),

@@ -4,7 +4,7 @@
     uSeq2Tracks Nextflow Pipeline
 ========================================================================================
     Universal Sequencing to Browser Tracks Pipeline
-    Github : https://github.com/your-org/uSeq2Tracks
+    Github : https://github.com/pgrady1322/uSeq2Tracks
 ----------------------------------------------------------------------------------------
 */
 

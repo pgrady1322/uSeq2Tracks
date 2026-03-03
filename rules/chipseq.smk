@@ -7,11 +7,11 @@ rule chipseq_map_bowtie2:
         unpack(get_input_reads),
         index=f"{GENOME_OUTDIR}/genome/bowtie2/genome.1.bt2"
     output:
-        bam=f"{config['outdir']}/chipseq/bam/{{sample}}.raw.bam"
+        bam=f"{GENOME_OUTDIR}/chipseq/bam/{{sample}}.raw.bam"
     params:
         index_prefix=f"{GENOME_OUTDIR}/genome/bowtie2/genome",
         bowtie2_opts=config["chipseq"]["bowtie2_opts"],
-        outdir=config['outdir']
+        outdir=GENOME_OUTDIR
     threads: config["resources"]["mapping_threads"]
     run:
         # Check if we have paired-end or single-end data
@@ -43,11 +43,11 @@ rule chipseq_map_bwa_mem2:
         unpack(get_input_reads),
         index=f"{GENOME_OUTDIR}/genome/bwa_mem2/genome.fa.0123"
     output:
-        bam=f"{config['outdir']}/chipseq/bam/{{sample}}.raw.bam"
+        bam=f"{GENOME_OUTDIR}/chipseq/bam/{{sample}}.raw.bam"
     params:
         index_prefix=f"{GENOME_OUTDIR}/genome/bwa_mem2/genome.fa",
         bwa_opts=config["chipseq"]["bwa_mem2_opts"],
-        outdir=config['outdir']
+        outdir=GENOME_OUTDIR
     threads: config["resources"]["mapping_threads"]
     run:
         # Check if we have paired-end or single-end data
@@ -82,10 +82,10 @@ else:
 
 rule chipseq_sort_and_index:
     input:
-        f"{config['outdir']}/chipseq/bam/{{sample}}.raw.bam"
+        f"{GENOME_OUTDIR}/chipseq/bam/{{sample}}.raw.bam"
     output:
-        bam=f"{config['outdir']}/chipseq/bam/{{sample}}.sorted.bam",
-        bai=f"{config['outdir']}/chipseq/bam/{{sample}}.sorted.bam.bai"
+        bam=f"{GENOME_OUTDIR}/chipseq/bam/{{sample}}.sorted.bam",
+        bai=f"{GENOME_OUTDIR}/chipseq/bam/{{sample}}.sorted.bam.bai"
     threads: config["resources"]["sort_threads"]
     resources:
         mem_mb=config.get('resources', {}).get('sort_memory_mb', 8000),
@@ -111,13 +111,13 @@ rule chipseq_sort_and_index:
 # Optional duplicate marking for ChIP-seq
 rule chipseq_markdup:
     input:
-        f"{config['outdir']}/chipseq/bam/{{sample}}.sorted.bam"
+        f"{GENOME_OUTDIR}/chipseq/bam/{{sample}}.sorted.bam"
     output:
-        bam=f"{config['outdir']}/chipseq/bam/{{sample}}.dedup.bam",
-        bai=f"{config['outdir']}/chipseq/bam/{{sample}}.dedup.bam.bai",
-        metrics=f"{config['outdir']}/chipseq/qc/{{sample}}.markdup.metrics"
+        bam=f"{GENOME_OUTDIR}/chipseq/bam/{{sample}}.dedup.bam",
+        bai=f"{GENOME_OUTDIR}/chipseq/bam/{{sample}}.dedup.bam.bai",
+        metrics=f"{GENOME_OUTDIR}/chipseq/qc/{{sample}}.markdup.metrics"
     params:
-        outdir=config['outdir']
+        outdir=GENOME_OUTDIR
     threads: config["resources"]["sort_threads"]
     shell:
         """
@@ -129,14 +129,14 @@ rule chipseq_markdup:
 
 rule chipseq_bam_to_bigwig:
     input:
-        bam=f"{config['outdir']}/chipseq/bam/{{sample}}.dedup.bam" if config["chipseq"]["markdup"] else f"{config['outdir']}/chipseq/bam/{{sample}}.sorted.bam",
-        bai=f"{config['outdir']}/chipseq/bam/{{sample}}.dedup.bam.bai" if config["chipseq"]["markdup"] else f"{config['outdir']}/chipseq/bam/{{sample}}.sorted.bam.bai",
+        bam=f"{GENOME_OUTDIR}/chipseq/bam/{{sample}}.dedup.bam" if config["chipseq"]["markdup"] else f"{GENOME_OUTDIR}/chipseq/bam/{{sample}}.sorted.bam",
+        bai=f"{GENOME_OUTDIR}/chipseq/bam/{{sample}}.dedup.bam.bai" if config["chipseq"]["markdup"] else f"{GENOME_OUTDIR}/chipseq/bam/{{sample}}.sorted.bam.bai",
         fai=f"{GENOME_OUTDIR}/genome/genome.fa.fai",
         sizes=f"{GENOME_OUTDIR}/genome/genome.sizes"
     output:
-        f"{config['outdir']}/chipseq/bigwig/{{sample}}.bw"
+        f"{GENOME_OUTDIR}/chipseq/bigwig/{{sample}}.bw"
     params:
-        outdir=config['outdir']
+        outdir=GENOME_OUTDIR
     threads: config["resources"]["sort_threads"]
     shell:
         """
@@ -150,15 +150,15 @@ rule chipseq_bam_to_bigwig:
 
 rule chipseq_call_peaks:
     input:
-        treatment=f"{config['outdir']}/chipseq/bam/{{sample}}.dedup.bam" if config["chipseq"]["markdup"] else f"{config['outdir']}/chipseq/bam/{{sample}}.sorted.bam",
+        treatment=f"{GENOME_OUTDIR}/chipseq/bam/{{sample}}.dedup.bam" if config["chipseq"]["markdup"] else f"{GENOME_OUTDIR}/chipseq/bam/{{sample}}.sorted.bam",
         control=get_control_for_sample
     output:
-        peaks=f"{config['outdir']}/chipseq/peaks/{{sample}}_peaks.narrowPeak",
-        summits=f"{config['outdir']}/chipseq/peaks/{{sample}}_summits.bed",
-        xls=f"{config['outdir']}/chipseq/peaks/{{sample}}_peaks.xls"
+        peaks=f"{GENOME_OUTDIR}/chipseq/peaks/{{sample}}_peaks.narrowPeak",
+        summits=f"{GENOME_OUTDIR}/chipseq/peaks/{{sample}}_summits.bed",
+        xls=f"{GENOME_OUTDIR}/chipseq/peaks/{{sample}}_peaks.xls"
     params:
         name="{sample}",
-        outdir=f"{config['outdir']}/chipseq/peaks",
+        outdir=f"{GENOME_OUTDIR}/chipseq/peaks",
         macs_opts=config["chipseq"]["macs3_opts"]
     shell:
         """
@@ -279,15 +279,15 @@ except:
 # Parameter sweep: Call peaks with multiple q-values for ChIP-seq
 rule chipseq_call_peaks_sweep:
     input:
-        treatment=f"{config['outdir']}/chipseq/bam/{{sample}}.dedup.bam" if config["chipseq"]["markdup"] else f"{config['outdir']}/chipseq/bam/{{sample}}.sorted.bam",
+        treatment=f"{GENOME_OUTDIR}/chipseq/bam/{{sample}}.dedup.bam" if config["chipseq"]["markdup"] else f"{GENOME_OUTDIR}/chipseq/bam/{{sample}}.sorted.bam",
         control=get_control_for_sample
     output:
-        peaks=f"{config['outdir']}/chipseq/peaks_sweep/{{sample}}_q{{qval}}_peaks.narrowPeak",
-        summits=f"{config['outdir']}/chipseq/peaks_sweep/{{sample}}_q{{qval}}_summits.bed",
-        xls=f"{config['outdir']}/chipseq/peaks_sweep/{{sample}}_q{{qval}}_peaks.xls"
+        peaks=f"{GENOME_OUTDIR}/chipseq/peaks_sweep/{{sample}}_q{{qval}}_peaks.narrowPeak",
+        summits=f"{GENOME_OUTDIR}/chipseq/peaks_sweep/{{sample}}_q{{qval}}_summits.bed",
+        xls=f"{GENOME_OUTDIR}/chipseq/peaks_sweep/{{sample}}_q{{qval}}_peaks.xls"
     params:
         name="{sample}_q{qval}",
-        outdir=f"{config['outdir']}/chipseq/peaks_sweep",
+        outdir=f"{GENOME_OUTDIR}/chipseq/peaks_sweep",
         qval="{qval}"
     shell:
         """
@@ -403,9 +403,9 @@ except:
 
 rule chipseq_complete:
     input:
-        bam=expand(f"{config['outdir']}/chipseq/bam/{{sample}}.dedup.bam", sample=CHIPSEQ_SAMPLES) if config["chipseq"]["markdup"] else expand(f"{config['outdir']}/chipseq/bam/{{sample}}.sorted.bam", sample=CHIPSEQ_SAMPLES),
-        bw=expand(f"{config['outdir']}/chipseq/bigwig/{{sample}}.bw", sample=CHIPSEQ_SAMPLES),
-        peaks=expand(f"{config['outdir']}/chipseq/peaks/{{sample}}_peaks.narrowPeak", sample=CHIPSEQ_SAMPLES)
+        bam=expand(f"{GENOME_OUTDIR}/chipseq/bam/{{sample}}.dedup.bam", sample=CHIPSEQ_SAMPLES) if config["chipseq"]["markdup"] else expand(f"{GENOME_OUTDIR}/chipseq/bam/{{sample}}.sorted.bam", sample=CHIPSEQ_SAMPLES),
+        bw=expand(f"{GENOME_OUTDIR}/chipseq/bigwig/{{sample}}.bw", sample=CHIPSEQ_SAMPLES),
+        peaks=expand(f"{GENOME_OUTDIR}/chipseq/peaks/{{sample}}_peaks.narrowPeak", sample=CHIPSEQ_SAMPLES)
     output:
         f"{GENOME_OUTDIR}/chipseq/tracks_complete.txt"
     shell:

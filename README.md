@@ -44,7 +44,7 @@ uSeq2Tracks is designed to standardize the processing of heterogeneous sequencin
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/uSeq2Tracks.git
+git clone https://github.com/pgrady1322/uSeq2Tracks.git
 cd uSeq2Tracks
 
 # Install dependencies with conda/mamba
@@ -154,7 +154,7 @@ ucsc:
   hub_short_label: "My Data"
   hub_long_label: "My Sequencing Data Hub"
   genome_name: "galGal6"
-  hub_email: "user@example.com"
+  hub_email: "pgrady1322@gmail.com"
 ```
 
 #### 3. Run Nextflow Pipeline
@@ -987,7 +987,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 ### Development Setup
 ```bash
-git clone https://github.com/your-org/uSeq2Tracks.git
+git clone https://github.com/pgrady1322/uSeq2Tracks.git
 cd uSeq2Tracks
 conda env create -f envs/development.yml
 conda activate useq2tracks-dev
@@ -999,16 +999,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Documentation**: [GitHub Wiki](https://github.com/your-org/uSeq2Tracks/wiki)
-- **Issues**: [GitHub Issues](https://github.com/your-org/uSeq2Tracks/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/uSeq2Tracks/discussions)
+- **Documentation**: [GitHub Wiki](https://github.com/pgrady1322/uSeq2Tracks/wiki)
+- **Issues**: [GitHub Issues](https://github.com/pgrady1322/uSeq2Tracks/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/pgrady1322/uSeq2Tracks/discussions)
 
 ## 🏆 Citation
 
 If you use uSeq2Tracks in your research, please cite:
 
 ```
-Your Name et al. (2025). uSeq2Tracks: A universal pipeline for sequencing data to genome browser tracks. 
+Patrick Grady (2025). uSeq2Tracks: A universal pipeline for sequencing data to genome browser tracks. 
 Journal Name, Volume(Issue), pages. DOI: 10.xxxx/xxxxx
 ```
 

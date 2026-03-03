@@ -163,5 +163,5 @@ ucsc:
   hub_name: "uSeq2Tracks_Hub"
   hub_short_label: "uSeq2Tracks"
   hub_long_label: "Universal Sequencing to Tracks Pipeline Output"
-  hub_email: "your.email@institution.edu"
+  hub_email: "pgrady1322@gmail.com"
   genome_name: "custom"

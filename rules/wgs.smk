@@ -8,7 +8,7 @@ rule wgs_map_bowtie2:
         unpack(get_input_reads),
         idx = f"{GENOME_OUTDIR}/genome/bowtie2/genome.1.bt2"
     output:
-        f"{config['outdir']}/wgs/bam/{{sample}}.raw.bam"
+        f"{GENOME_OUTDIR}/wgs/bam/{{sample}}.raw.bam"
     params:
         bowtie2_opts = config.get('wgs', {}).get('bowtie2_opts', '--very-sensitive'),
         genome_prefix = f"{GENOME_OUTDIR}/genome/bowtie2/genome"
@@ -40,7 +40,7 @@ rule wgs_map_bwa_mem2:
         unpack(get_input_reads),
         idx = f"{GENOME_OUTDIR}/genome/bwa_mem2/genome.fa.bwt.2bit.64"
     output:
-        f"{config['outdir']}/wgs/bam/{{sample}}.raw.bam"
+        f"{GENOME_OUTDIR}/wgs/bam/{{sample}}.raw.bam"
     params:
         bwa_mem2_opts = config.get('wgs', {}).get('bwa_mem2_opts', '-M'),
         genome_prefix = f"{GENOME_OUTDIR}/genome/bwa_mem2/genome.fa"
@@ -69,10 +69,10 @@ rule wgs_map_bwa_mem2:
 # Sort and index WGS BAM files
 rule wgs_sort_and_index:
     input:
-        f"{config['outdir']}/wgs/bam/{{sample}}.raw.bam"
+        f"{GENOME_OUTDIR}/wgs/bam/{{sample}}.raw.bam"
     output:
-        bam = f"{config['outdir']}/wgs/bam/{{sample}}.sorted.bam",
-        bai = f"{config['outdir']}/wgs/bam/{{sample}}.sorted.bam.bai"
+        bam = f"{GENOME_OUTDIR}/wgs/bam/{{sample}}.sorted.bam",
+        bai = f"{GENOME_OUTDIR}/wgs/bam/{{sample}}.sorted.bam.bai"
     params:
     threads: config.get('wgs', {}).get('threads', config['resources']['mapping_threads'])
     shell:
@@ -84,10 +84,10 @@ rule wgs_sort_and_index:
 # Mark duplicates in WGS BAM files
 rule wgs_markdup:
     input:
-        f"{config['outdir']}/wgs/bam/{{sample}}.sorted.bam"
+        f"{GENOME_OUTDIR}/wgs/bam/{{sample}}.sorted.bam"
     output:
-        bam = f"{config['outdir']}/wgs/bam/{{sample}}.dedup.bam",
-        metrics = f"{config['outdir']}/wgs/qc/{{sample}}.markdup.metrics"
+        bam = f"{GENOME_OUTDIR}/wgs/bam/{{sample}}.dedup.bam",
+        metrics = f"{GENOME_OUTDIR}/wgs/qc/{{sample}}.markdup.metrics"
     threads: config.get('wgs', {}).get('threads', config['resources']['mapping_threads'])
     shell:
         """
@@ -99,10 +99,10 @@ rule wgs_markdup:
 # Convert WGS BAM to CRAM for space efficiency
 rule wgs_bam_to_cram:
     input:
-        bam = f"{config['outdir']}/wgs/bam/{{sample}}.dedup.bam" if config.get('wgs', {}).get('markdup', True) else f"{config['outdir']}/wgs/bam/{{sample}}.sorted.bam",
+        bam = f"{GENOME_OUTDIR}/wgs/bam/{{sample}}.dedup.bam" if config.get('wgs', {}).get('markdup', True) else f"{GENOME_OUTDIR}/wgs/bam/{{sample}}.sorted.bam",
         ref = f"{GENOME_OUTDIR}/genome/genome.fa"
     output:
-        f"{config['outdir']}/wgs/cram/{{sample}}.cram"
+        f"{GENOME_OUTDIR}/wgs/cram/{{sample}}.cram"
     params:
     threads: config.get('wgs', {}).get('threads', config['resources']['mapping_threads'])
     shell:
@@ -115,10 +115,10 @@ rule wgs_bam_to_cram:
 # Convert WGS BAM to BigWig for visualization
 rule wgs_bam_to_bigwig:
     input:
-        bam = f"{config['outdir']}/wgs/bam/{{sample}}.dedup.bam" if config.get('wgs', {}).get('markdup', True) else f"{config['outdir']}/wgs/bam/{{sample}}.sorted.bam",
+        bam = f"{GENOME_OUTDIR}/wgs/bam/{{sample}}.dedup.bam" if config.get('wgs', {}).get('markdup', True) else f"{GENOME_OUTDIR}/wgs/bam/{{sample}}.sorted.bam",
         fai = f"{GENOME_OUTDIR}/genome/genome.fa.fai"
     output:
-        f"{config['outdir']}/wgs/bigwig/{{sample}}.bw"
+        f"{GENOME_OUTDIR}/wgs/bigwig/{{sample}}.bw"
     params:
         normalize = config.get('wgs', {}).get('bw_norm', 'CPM')
     threads: config.get('wgs', {}).get('threads', config['resources']['mapping_threads'])
@@ -133,10 +133,10 @@ rule wgs_bam_to_bigwig:
 # Run variant calling with bcftools (optional for WGS)
 rule wgs_variant_calling:
     input:
-        bam = f"{config['outdir']}/wgs/bam/{{sample}}.dedup.bam" if config.get('wgs', {}).get('markdup', True) else f"{config['outdir']}/wgs/bam/{{sample}}.sorted.bam",
+        bam = f"{GENOME_OUTDIR}/wgs/bam/{{sample}}.dedup.bam" if config.get('wgs', {}).get('markdup', True) else f"{GENOME_OUTDIR}/wgs/bam/{{sample}}.sorted.bam",
         ref = f"{GENOME_OUTDIR}/genome/genome.fa"
     output:
-        f"{config['outdir']}/wgs/variants/{{sample}}.vcf.gz"
+        f"{GENOME_OUTDIR}/wgs/variants/{{sample}}.vcf.gz"
     params:
     threads: config.get('wgs', {}).get('threads', config['resources']['mapping_threads'])
     shell:
@@ -150,9 +150,9 @@ rule wgs_variant_calling:
 # Complete WGS pipeline marker
 rule wgs_complete:
     input:
-        expand(f"{config['outdir']}/wgs/bam/{{sample}}.dedup.bam", sample=WGS_SAMPLES) if config.get('wgs', {}).get('markdup', True) else expand(f"{config['outdir']}/wgs/bam/{{sample}}.sorted.bam", sample=WGS_SAMPLES),
-        expand(f"{config['outdir']}/wgs/bigwig/{{sample}}.bw", sample=WGS_SAMPLES),
-        expand(f"{config['outdir']}/wgs/cram/{{sample}}.cram", sample=WGS_SAMPLES)
+        expand(f"{GENOME_OUTDIR}/wgs/bam/{{sample}}.dedup.bam", sample=WGS_SAMPLES) if config.get('wgs', {}).get('markdup', True) else expand(f"{GENOME_OUTDIR}/wgs/bam/{{sample}}.sorted.bam", sample=WGS_SAMPLES),
+        expand(f"{GENOME_OUTDIR}/wgs/bigwig/{{sample}}.bw", sample=WGS_SAMPLES),
+        expand(f"{GENOME_OUTDIR}/wgs/cram/{{sample}}.cram", sample=WGS_SAMPLES)
     output:
         f"{GENOME_OUTDIR}/wgs/tracks_complete.txt"
     params:

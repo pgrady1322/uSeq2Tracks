@@ -21,9 +21,9 @@ def get_genrich_treatment_bams_atacseq(wildcards):
     bam_files = []
     for sample in samples:
         if config.get('atacseq', {}).get('markdup', False):
-            bam_files.append(f"{config['outdir']}/atacseq/bam/{sample}.dedup.bam")
+            bam_files.append(f"{GENOME_OUTDIR}/atacseq/bam/{sample}.dedup.bam")
         else:
-            bam_files.append(f"{config['outdir']}/atacseq/bam/{sample}.sorted.bam")
+            bam_files.append(f"{GENOME_OUTDIR}/atacseq/bam/{sample}.sorted.bam")
     
     return bam_files
 
@@ -44,9 +44,9 @@ def get_genrich_treatment_bams_cutrun(wildcards):
     bam_files = []
     for sample in samples:
         if config.get('cutrun', {}).get('markdup', False):
-            bam_files.append(f"{config['outdir']}/cutrun/bam/{sample}.dedup.bam")
+            bam_files.append(f"{GENOME_OUTDIR}/cutrun/bam/{sample}.dedup.bam")
         else:
-            bam_files.append(f"{config['outdir']}/cutrun/bam/{sample}.sorted.bam")
+            bam_files.append(f"{GENOME_OUTDIR}/cutrun/bam/{sample}.sorted.bam")
     
     return bam_files
 
@@ -68,9 +68,9 @@ def get_genrich_control_bams_cutrun(wildcards):
     bam_files = []
     for sample in control_samples:
         if config.get('cutrun', {}).get('markdup', False):
-            bam_files.append(f"{config['outdir']}/cutrun/bam/{sample}.dedup.bam")
+            bam_files.append(f"{GENOME_OUTDIR}/cutrun/bam/{sample}.dedup.bam")
         else:
-            bam_files.append(f"{config['outdir']}/cutrun/bam/{sample}.sorted.bam")
+            bam_files.append(f"{GENOME_OUTDIR}/cutrun/bam/{sample}.sorted.bam")
     
     return bam_files
 
@@ -87,9 +87,9 @@ def get_genrich_treatment_bams_chipseq(wildcards):
     bam_files = []
     for sample in samples:
         if config.get('chipseq', {}).get('markdup', False):
-            bam_files.append(f"{config['outdir']}/chipseq/bam/{sample}.dedup.bam")
+            bam_files.append(f"{GENOME_OUTDIR}/chipseq/bam/{sample}.dedup.bam")
         else:
-            bam_files.append(f"{config['outdir']}/chipseq/bam/{sample}.sorted.bam")
+            bam_files.append(f"{GENOME_OUTDIR}/chipseq/bam/{sample}.sorted.bam")
     
     return bam_files
 
@@ -111,9 +111,9 @@ def get_genrich_control_bams_chipseq(wildcards):
     bam_files = []
     for sample in control_samples:
         if config.get('chipseq', {}).get('markdup', False):
-            bam_files.append(f"{config['outdir']}/chipseq/bam/{sample}.dedup.bam")
+            bam_files.append(f"{GENOME_OUTDIR}/chipseq/bam/{sample}.dedup.bam")
         else:
-            bam_files.append(f"{config['outdir']}/chipseq/bam/{sample}.sorted.bam")
+            bam_files.append(f"{GENOME_OUTDIR}/chipseq/bam/{sample}.sorted.bam")
     
     return bam_files
 
@@ -123,11 +123,11 @@ rule atacseq_genrich_peaks:
         treatment = get_genrich_treatment_bams_atacseq,
         control = get_genrich_control_bams_atacseq
     output:
-        peaks = f"{config['outdir']}/atacseq/genrich_peaks/{{group}}_genrich.narrowPeak"
+        peaks = f"{GENOME_OUTDIR}/atacseq/genrich_peaks/{{group}}_genrich.narrowPeak"
     params:
         atac_flag = "-j" if config.get('genrich', {}).get('atac_mode', True) else "",
         genrich_opts = config.get('genrich', {}).get('options', '-q 0.05'),
-        outdir = f"{config['outdir']}/atacseq/genrich_peaks"
+        outdir = f"{GENOME_OUTDIR}/atacseq/genrich_peaks"
     shell:
         """
         mkdir -p {params.outdir}
@@ -166,11 +166,11 @@ rule cutrun_genrich_peaks:
         treatment = get_genrich_treatment_bams_cutrun,
         control = get_genrich_control_bams_cutrun
     output:
-        peaks = f"{config['outdir']}/cutrun/genrich_peaks/{{group}}_genrich.narrowPeak"
+        peaks = f"{GENOME_OUTDIR}/cutrun/genrich_peaks/{{group}}_genrich.narrowPeak"
     params:
         atac_flag = "-j" if config.get('genrich', {}).get('atac_mode', True) else "",
         genrich_opts = config.get('genrich', {}).get('options', '-q 0.05'),
-        outdir = f"{config['outdir']}/cutrun/genrich_peaks"
+        outdir = f"{GENOME_OUTDIR}/cutrun/genrich_peaks"
     shell:
         """
         mkdir -p {params.outdir}
@@ -209,10 +209,10 @@ rule chipseq_genrich_peaks:
         treatment = get_genrich_treatment_bams_chipseq,
         control = get_genrich_control_bams_chipseq
     output:
-        peaks = f"{config['outdir']}/chipseq/genrich_peaks/{{group}}_genrich.narrowPeak"
+        peaks = f"{GENOME_OUTDIR}/chipseq/genrich_peaks/{{group}}_genrich.narrowPeak"
     params:
         genrich_opts = config.get('genrich', {}).get('options', '-q 0.05'),
-        outdir = f"{config['outdir']}/chipseq/genrich_peaks"
+        outdir = f"{GENOME_OUTDIR}/chipseq/genrich_peaks"
     shell:
         """
         mkdir -p {params.outdir}
@@ -248,14 +248,14 @@ rule chipseq_genrich_peaks:
 # Generate all Genrich peaks for all assays
 rule genrich_all_peaks:
     input:
-        atacseq = expand(f"{config['outdir']}/atacseq/genrich_peaks/{{group}}_genrich.narrowPeak", 
+        atacseq = expand(f"{GENOME_OUTDIR}/atacseq/genrich_peaks/{{group}}_genrich.narrowPeak", 
                         group=[g for g in get_genrich_samples_by_replicate_group('atacseq').keys()]) if ATACSEQ_SAMPLES and config.get('genrich', {}).get('enabled', False) else [],
-        cutrun = expand(f"{config['outdir']}/cutrun/genrich_peaks/{{group}}_genrich.narrowPeak", 
+        cutrun = expand(f"{GENOME_OUTDIR}/cutrun/genrich_peaks/{{group}}_genrich.narrowPeak", 
                        group=[g for g in get_genrich_samples_by_replicate_group('cutrun').keys()]) if CUTRUN_SAMPLES and config.get('genrich', {}).get('enabled', False) else [],
-        chipseq = expand(f"{config['outdir']}/chipseq/genrich_peaks/{{group}}_genrich.narrowPeak", 
+        chipseq = expand(f"{GENOME_OUTDIR}/chipseq/genrich_peaks/{{group}}_genrich.narrowPeak", 
                         group=[g for g in get_genrich_samples_by_replicate_group('chipseq').keys()]) if CHIPSEQ_SAMPLES and config.get('genrich', {}).get('enabled', False) else []
     output:
-        f"{config['outdir']}/genrich/genrich_complete.txt"
+        f"{GENOME_OUTDIR}/genrich/genrich_complete.txt"
     shell:
         """
         mkdir -p $(dirname {output})
@@ -269,7 +269,7 @@ rule genrich_all_peaks:
 # Rule to run only Genrich analysis
 rule genrich:
     input:
-        f"{config['outdir']}/genrich/genrich_complete.txt"
+        f"{GENOME_OUTDIR}/genrich/genrich_complete.txt"
     message:
         "Genrich peak calling analysis complete"
 
@@ -297,7 +297,7 @@ def get_genrich_sweep_outputs(wildcards=None):
             for qval in qvalues:
                 # Convert qvalue to filename format (0.05 -> q005)
                 qval_str = f"q{str(qval).replace('0.', '').zfill(3)}"
-                outputs.append(f"{config['outdir']}/{assay}/genrich_sweep/{group}_genrich_{qval_str}.narrowPeak")
+                outputs.append(f"{GENOME_OUTDIR}/{assay}/genrich_sweep/{group}_genrich_{qval_str}.narrowPeak")
     
     return outputs
 
@@ -307,10 +307,10 @@ rule atacseq_genrich_sweep:
         treatment = get_genrich_treatment_bams_atacseq,
         control = get_genrich_control_bams_atacseq
     output:
-        peaks = f"{config['outdir']}/atacseq/genrich_sweep/{{group}}_genrich_{{qval}}.narrowPeak"
+        peaks = f"{GENOME_OUTDIR}/atacseq/genrich_sweep/{{group}}_genrich_{{qval}}.narrowPeak"
     params:
         atac_flag = "-j" if config.get('genrich', {}).get('atac_mode', True) else "",
-        outdir = f"{config['outdir']}/atacseq/genrich_sweep"
+        outdir = f"{GENOME_OUTDIR}/atacseq/genrich_sweep"
     shell:
         """
         mkdir -p {params.outdir}
@@ -339,10 +339,10 @@ rule cutrun_genrich_sweep:
         treatment = get_genrich_treatment_bams_cutrun,
         control = get_genrich_control_bams_cutrun
     output:
-        peaks = f"{config['outdir']}/cutrun/genrich_sweep/{{group}}_genrich_{{qval}}.narrowPeak"
+        peaks = f"{GENOME_OUTDIR}/cutrun/genrich_sweep/{{group}}_genrich_{{qval}}.narrowPeak"
     params:
         atac_flag = "-j" if config.get('genrich', {}).get('atac_mode', True) else "",
-        outdir = f"{config['outdir']}/cutrun/genrich_sweep"
+        outdir = f"{GENOME_OUTDIR}/cutrun/genrich_sweep"
     shell:
         """
         mkdir -p {params.outdir}
@@ -371,9 +371,9 @@ rule chipseq_genrich_sweep:
         treatment = get_genrich_treatment_bams_chipseq,
         control = get_genrich_control_bams_chipseq
     output:
-        peaks = f"{config['outdir']}/chipseq/genrich_sweep/{{group}}_genrich_{{qval}}.narrowPeak"
+        peaks = f"{GENOME_OUTDIR}/chipseq/genrich_sweep/{{group}}_genrich_{{qval}}.narrowPeak"
     params:
-        outdir = f"{config['outdir']}/chipseq/genrich_sweep"
+        outdir = f"{GENOME_OUTDIR}/chipseq/genrich_sweep"
     shell:
         """
         mkdir -p {params.outdir}
@@ -402,7 +402,7 @@ rule genrich_parameter_sweep_summary:
     input:
         get_genrich_sweep_outputs
     output:
-        f"{config['outdir']}/genrich_sweep/genrich_sweep_summary.txt"
+        f"{GENOME_OUTDIR}/genrich_sweep/genrich_sweep_summary.txt"
     shell:
         """
         mkdir -p $(dirname {output})

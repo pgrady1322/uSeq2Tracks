@@ -5,10 +5,10 @@
 # Map Nanopore reads with minimap2
 rule nanopore_map_minimap2:
     input:
-        reads = f"{config['outdir']}/sra/{{sample}}.fastq.gz",
+        unpack(get_input_reads),
         ref = f"{GENOME_OUTDIR}/genome/genome.fa"
     output:
-        f"{config['outdir']}/nanopore/bam/{{sample}}.raw.bam"
+        f"{GENOME_OUTDIR}/nanopore/bam/{{sample}}.raw.bam"
     params:
         minimap2_opts = config.get('nanopore', {}).get('minimap2_opts', '-x map-ont')
     threads: config.get('nanopore', {}).get('threads', config['resources']['mapping_threads'])
@@ -16,17 +16,17 @@ rule nanopore_map_minimap2:
         """
         mkdir -p $(dirname {output})
         minimap2 -ax map-ont {params.minimap2_opts} -t {threads} \
-                 {input.ref} {input.reads} \
+                 {input.ref} {input.r1} \
           | samtools view -bS -o {output} -
         """
 
 # Sort and index Nanopore BAM files
 rule nanopore_sort_and_index:
     input:
-        f"{config['outdir']}/nanopore/bam/{{sample}}.raw.bam"
+        f"{GENOME_OUTDIR}/nanopore/bam/{{sample}}.raw.bam"
     output:
-        bam = f"{config['outdir']}/nanopore/bam/{{sample}}.sorted.bam",
-        bai = f"{config['outdir']}/nanopore/bam/{{sample}}.sorted.bam.bai"
+        bam = f"{GENOME_OUTDIR}/nanopore/bam/{{sample}}.sorted.bam",
+        bai = f"{GENOME_OUTDIR}/nanopore/bam/{{sample}}.sorted.bam.bai"
     params:
     threads: config.get('nanopore', {}).get('threads', config['resources']['mapping_threads'])
     shell:
@@ -38,13 +38,13 @@ rule nanopore_sort_and_index:
 # Call variants with Clair3 (optimized for Nanopore) - only if enabled
 rule nanopore_variant_calling:
     input:
-        bam = f"{config['outdir']}/nanopore/bam/{{sample}}.sorted.bam",
+        bam = f"{GENOME_OUTDIR}/nanopore/bam/{{sample}}.sorted.bam",
         ref = f"{GENOME_OUTDIR}/genome/genome.fa"
     output:
-        f"{config['outdir']}/nanopore/variants/{{sample}}.vcf.gz"
+        f"{GENOME_OUTDIR}/nanopore/variants/{{sample}}.vcf.gz"
     params:
         model = config.get('nanopore', {}).get('clair3_model', '/path/to/model'),
-        outdir = f"{config['outdir']}/nanopore/variants/{{sample}}"
+        outdir = f"{GENOME_OUTDIR}/nanopore/variants/{{sample}}"
     threads: config.get('nanopore', {}).get('threads', config['resources']['mapping_threads'])
     shell:
         """
@@ -61,10 +61,10 @@ rule nanopore_variant_calling:
 # Convert Nanopore BAM to BigWig for visualization
 rule nanopore_bam_to_bigwig:
     input:
-        bam = f"{config['outdir']}/nanopore/bam/{{sample}}.sorted.bam",
+        bam = f"{GENOME_OUTDIR}/nanopore/bam/{{sample}}.sorted.bam",
         fai = f"{GENOME_OUTDIR}/genome/genome.fa.fai"
     output:
-        f"{config['outdir']}/nanopore/bigwig/{{sample}}.bw"
+        f"{GENOME_OUTDIR}/nanopore/bigwig/{{sample}}.bw"
     params:
         normalize = config.get('nanopore', {}).get('bw_norm', 'CPM')
     threads: config.get('nanopore', {}).get('threads', config['resources']['mapping_threads'])
@@ -79,25 +79,25 @@ rule nanopore_bam_to_bigwig:
 # Nanopore read statistics and quality assessment
 rule nanopore_read_stats:
     input:
-        reads = f"{config['outdir']}/sra/{{sample}}.fastq.gz"
+        unpack(get_input_reads)
     output:
-        stats = f"{config['outdir']}/nanopore/qc/{{sample}}_read_stats.txt",
-        plot = f"{config['outdir']}/nanopore/qc/{{sample}}_read_length_dist.png"
+        stats = f"{GENOME_OUTDIR}/nanopore/qc/{{sample}}_read_stats.txt",
+        plot = f"{GENOME_OUTDIR}/nanopore/qc/{{sample}}_read_length_dist.png"
     params:
     shell:
         """
         mkdir -p $(dirname {output.stats})
-        NanoStat --fastq {input.reads} --name {output.stats}
-        NanoPlot --fastq {input.reads} --plots dot --outdir $(dirname {output.plot}) --prefix {wildcards.sample}_
+        NanoStat --fastq {input.r1} --name {output.stats}
+        NanoPlot --fastq {input.r1} --plots dot --outdir $(dirname {output.plot}) --prefix {wildcards.sample}_
         """
 
 # Complete Nanopore pipeline marker
 rule nanopore_complete:
     input:
-        expand(f"{config['outdir']}/nanopore/bam/{{sample}}.sorted.bam", sample=NANOPORE_SAMPLES),
-        expand(f"{config['outdir']}/nanopore/bigwig/{{sample}}.bw", sample=NANOPORE_SAMPLES),
+        expand(f"{GENOME_OUTDIR}/nanopore/bam/{{sample}}.sorted.bam", sample=NANOPORE_SAMPLES),
+        expand(f"{GENOME_OUTDIR}/nanopore/bigwig/{{sample}}.bw", sample=NANOPORE_SAMPLES),
         # Only include variants if variant calling is enabled
-        (expand(f"{config['outdir']}/nanopore/variants/{{sample}}.vcf.gz", sample=NANOPORE_SAMPLES) 
+        (expand(f"{GENOME_OUTDIR}/nanopore/variants/{{sample}}.vcf.gz", sample=NANOPORE_SAMPLES) 
          if config['nanopore']['variant_calling'] else [])
     output:
         f"{GENOME_OUTDIR}/nanopore/tracks_complete.txt"

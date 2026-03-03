@@ -123,9 +123,9 @@ def get_control_for_sample(wildcards):
     for sample_id, info in SAMPLES.items():
         if info.get('condition') == control_condition:
             if config.get("chipseq", {}).get("markdup", False):
-                return f"{config['outdir']}/chipseq/bam/{sample_id}.dedup.bam"
+                return f"{GENOME_OUTDIR}/chipseq/bam/{sample_id}.dedup.bam"
             else:
-                return f"{config['outdir']}/chipseq/bam/{sample_id}.sorted.bam"
+                return f"{GENOME_OUTDIR}/chipseq/bam/{sample_id}.sorted.bam"
     
     # No control found
     return []
@@ -143,7 +143,7 @@ def get_trimmed_reads(wildcards):
     sample_info = SAMPLES[wildcards.sample]
     
     # Return trimmed reads
-    reads = {"r1": f"{config['outdir']}/trimmed/{wildcards.sample}_R1_trimmed.fastq.gz"}
+    reads = {"r1": f"{GENOME_OUTDIR}/trimmed/{wildcards.sample}_R1_trimmed.fastq.gz"}
     
     # Check if we should expect R2 (paired-end data)
     if has_local_files(sample_info):
@@ -151,11 +151,11 @@ def get_trimmed_reads(wildcards):
         if 'read2' in sample_info and sample_info['read2']:
             read2 = sample_info['read2']
             if not pd.isna(read2) and str(read2).strip() not in {'', 'nan', 'NaN', 'none'}:
-                reads["r2"] = f"{config['outdir']}/trimmed/{wildcards.sample}_R2_trimmed.fastq.gz"
+                reads["r2"] = f"{GENOME_OUTDIR}/trimmed/{wildcards.sample}_R2_trimmed.fastq.gz"
     elif is_valid_sra_id(sample_info.get('sra_id', '')):
         # SRA data - will be auto-detected during trimming
         # Always include R2 path, but actual presence depends on SRA layout
-        reads["r2"] = f"{config['outdir']}/trimmed/{wildcards.sample}_R2_trimmed.fastq.gz"
+        reads["r2"] = f"{GENOME_OUTDIR}/trimmed/{wildcards.sample}_R2_trimmed.fastq.gz"
     
     return reads
 

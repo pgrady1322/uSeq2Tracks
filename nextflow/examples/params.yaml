@@ -91,7 +91,7 @@ ucsc:
   hub_short_label: "My Data Hub"
   hub_long_label: "My Sequencing Data Analysis Hub"
   genome_name: "galGal6"  # Should match genome_id
-  hub_email: "user@example.com"
+  hub_email: "pgrady1322@gmail.com"
 
 # Replicate merging
 merge_replicates: true

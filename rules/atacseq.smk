@@ -9,7 +9,7 @@ rule atacseq_map_bowtie2:
         unpack(get_input_reads),
         idx = f"{GENOME_OUTDIR}/genome/bowtie2/genome.1.bt2"
     output:
-        f"{config['outdir']}/atacseq/bam/{{sample}}.raw.bam"
+        f"{GENOME_OUTDIR}/atacseq/bam/{{sample}}.raw.bam"
     params:
         bowtie2_opts = config.get('atacseq', {}).get('bowtie2_opts', '--very-sensitive'),
         genome_prefix = f"{GENOME_OUTDIR}/genome/bowtie2/genome"
@@ -41,7 +41,7 @@ rule atacseq_map_bwa_mem2:
         unpack(get_input_reads),
         idx = f"{GENOME_OUTDIR}/genome/bwa_mem2/genome.fa.bwt.2bit.64"
     output:
-        f"{config['outdir']}/atacseq/bam/{{sample}}.raw.bam"
+        f"{GENOME_OUTDIR}/atacseq/bam/{{sample}}.raw.bam"
     params:
         bwa_mem2_opts = config.get('atacseq', {}).get('bwa_mem2_opts', '-M'),
         genome_prefix = f"{GENOME_OUTDIR}/genome/bwa_mem2/genome.fa"
@@ -70,10 +70,10 @@ rule atacseq_map_bwa_mem2:
 # Sort, mark duplicates, and index ATAC-seq BAM files
 rule atacseq_sort_and_index:
     input:
-        f"{config['outdir']}/atacseq/bam/{{sample}}.raw.bam"
+        f"{GENOME_OUTDIR}/atacseq/bam/{{sample}}.raw.bam"
     output:
-        bam = f"{config['outdir']}/atacseq/bam/{{sample}}.sorted.bam",
-        bai = f"{config['outdir']}/atacseq/bam/{{sample}}.sorted.bam.bai"
+        bam = f"{GENOME_OUTDIR}/atacseq/bam/{{sample}}.sorted.bam",
+        bai = f"{GENOME_OUTDIR}/atacseq/bam/{{sample}}.sorted.bam.bai"
     params:
     threads: config.get('atacseq', {}).get('threads', config['resources']['mapping_threads'])
     resources:
@@ -100,10 +100,10 @@ rule atacseq_sort_and_index:
 # Mark duplicates in ATAC-seq BAM files
 rule atacseq_markdup:
     input:
-        f"{config['outdir']}/atacseq/bam/{{sample}}.sorted.bam"
+        f"{GENOME_OUTDIR}/atacseq/bam/{{sample}}.sorted.bam"
     output:
-        bam = f"{config['outdir']}/atacseq/bam/{{sample}}.dedup.bam",
-        metrics = f"{config['outdir']}/atacseq/qc/{{sample}}.markdup.metrics"
+        bam = f"{GENOME_OUTDIR}/atacseq/bam/{{sample}}.dedup.bam",
+        metrics = f"{GENOME_OUTDIR}/atacseq/qc/{{sample}}.markdup.metrics"
     threads: config.get('atacseq', {}).get('threads', config['resources']['mapping_threads'])
     shell:
         """
@@ -116,14 +116,14 @@ rule atacseq_markdup:
 # Call peaks with MACS3 for ATAC-seq (using ATAC-seq specific parameters)
 rule atacseq_call_peaks:
     input:
-        f"{config['outdir']}/atacseq/bam/{{sample}}.dedup.bam" if config.get('atacseq', {}).get('markdup', True) else f"{config['outdir']}/atacseq/bam/{{sample}}.sorted.bam"
+        f"{GENOME_OUTDIR}/atacseq/bam/{{sample}}.dedup.bam" if config.get('atacseq', {}).get('markdup', True) else f"{GENOME_OUTDIR}/atacseq/bam/{{sample}}.sorted.bam"
     output:
-        f"{config['outdir']}/atacseq/peaks/{{sample}}_peaks.narrowPeak"
+        f"{GENOME_OUTDIR}/atacseq/peaks/{{sample}}_peaks.narrowPeak"
     params:
         shift = config.get('atacseq', {}).get('shift', -75),
         extsize = config.get('atacseq', {}).get('extsize', 150),
         macs3_opts = config.get('atacseq', {}).get('macs3_opts', '--qval 0.05'),
-        outdir = f"{config['outdir']}/atacseq/peaks",
+        outdir = f"{GENOME_OUTDIR}/atacseq/peaks",
         prefix = "{sample}"
     shell:
         """
@@ -149,13 +149,13 @@ rule atacseq_call_peaks:
 # Parameter sweep: Call peaks with multiple q-values for ATAC-seq
 rule atacseq_call_peaks_sweep:
     input:
-        f"{config['outdir']}/atacseq/bam/{{sample}}.dedup.bam" if config.get('atacseq', {}).get('markdup', True) else f"{config['outdir']}/atacseq/bam/{{sample}}.sorted.bam"
+        f"{GENOME_OUTDIR}/atacseq/bam/{{sample}}.dedup.bam" if config.get('atacseq', {}).get('markdup', True) else f"{GENOME_OUTDIR}/atacseq/bam/{{sample}}.sorted.bam"
     output:
-        f"{config['outdir']}/atacseq/peaks_sweep/{{sample}}_q{{qval}}_peaks.narrowPeak"
+        f"{GENOME_OUTDIR}/atacseq/peaks_sweep/{{sample}}_q{{qval}}_peaks.narrowPeak"
     params:
         shift = config.get('atacseq', {}).get('shift', -75),
         extsize = config.get('atacseq', {}).get('extsize', 150),
-        outdir = f"{config['outdir']}/atacseq/peaks_sweep",
+        outdir = f"{GENOME_OUTDIR}/atacseq/peaks_sweep",
         prefix = "{sample}_q{qval}",
         qval = "{qval}"
     shell:
@@ -183,10 +183,10 @@ rule atacseq_call_peaks_sweep:
 # Convert ATAC-seq BAM to BigWig for visualization
 rule atacseq_bam_to_bigwig:
     input:
-        bam = f"{config['outdir']}/atacseq/bam/{{sample}}.dedup.bam" if config.get('atacseq', {}).get('markdup', True) else f"{config['outdir']}/atacseq/bam/{{sample}}.sorted.bam",
+        bam = f"{GENOME_OUTDIR}/atacseq/bam/{{sample}}.dedup.bam" if config.get('atacseq', {}).get('markdup', True) else f"{GENOME_OUTDIR}/atacseq/bam/{{sample}}.sorted.bam",
         fai = f"{GENOME_OUTDIR}/genome/genome.fa.fai"
     output:
-        f"{config['outdir']}/atacseq/bigwig/{{sample}}.bw"
+        f"{GENOME_OUTDIR}/atacseq/bigwig/{{sample}}.bw"
     params:
         normalize = config.get('atacseq', {}).get('bw_norm', 'CPM')
     threads: config.get('atacseq', {}).get('threads', config['resources']['mapping_threads'])
@@ -213,9 +213,9 @@ rule atacseq_bam_to_bigwig:
 # Complete ATAC-seq pipeline marker
 rule atacseq_complete:
     input:
-        expand(f"{config['outdir']}/atacseq/bam/{{sample}}.dedup.bam", sample=ATACSEQ_SAMPLES) if config.get('atacseq', {}).get('markdup', True) else expand(f"{config['outdir']}/atacseq/bam/{{sample}}.sorted.bam", sample=ATACSEQ_SAMPLES),
-        expand(f"{config['outdir']}/atacseq/bigwig/{{sample}}.bw", sample=ATACSEQ_SAMPLES),
-        expand(f"{config['outdir']}/atacseq/peaks/{{sample}}_peaks.narrowPeak", sample=ATACSEQ_SAMPLES)
+        expand(f"{GENOME_OUTDIR}/atacseq/bam/{{sample}}.dedup.bam", sample=ATACSEQ_SAMPLES) if config.get('atacseq', {}).get('markdup', True) else expand(f"{GENOME_OUTDIR}/atacseq/bam/{{sample}}.sorted.bam", sample=ATACSEQ_SAMPLES),
+        expand(f"{GENOME_OUTDIR}/atacseq/bigwig/{{sample}}.bw", sample=ATACSEQ_SAMPLES),
+        expand(f"{GENOME_OUTDIR}/atacseq/peaks/{{sample}}_peaks.narrowPeak", sample=ATACSEQ_SAMPLES)
     output:
         f"{GENOME_OUTDIR}/atacseq/tracks_complete.txt"
     params:

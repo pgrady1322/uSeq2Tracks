@@ -171,37 +171,7 @@ include: "rules/replicate_merging.smk"
 include: "rules/parameter_sweep.smk"
 include: "rules/genrich.smk"
 
-# ───────── UTILITY FUNCTIONS ─────────
-def is_valid_sra_id(sra_id):
-    """
-    Robust check for valid SRA ID that handles all edge cases:
-    - None, NaN, empty strings, whitespace
-    - Various pandas representations of missing data
-    - String representations of NaN
-    """
-    if sra_id is None:
-        return False
-    
-    # Handle pandas NaN values
-    if pd.isna(sra_id):
-        return False
-        
-    # Convert to string and check various empty/invalid representations
-    sra_str = str(sra_id).strip()
-    invalid_values = {'', 'nan', 'NaN', 'none', 'None', 'null', 'NULL', '<NA>', 'N/A', 'n/a'}
-    
-    return sra_str not in invalid_values and len(sra_str) > 0
-
-def has_local_files(sample_info):
-    """Check if sample has valid local file paths"""
-    read1 = sample_info.get('read1', '')
-    read2 = sample_info.get('read2', '')
-    
-    # At minimum, read1 should exist and be a valid path
-    if not read1 or pd.isna(read1) or str(read1).strip() in {'', 'nan', 'NaN', 'none'}:
-        return False
-    
-    return True
+# NOTE: is_valid_sra_id() and has_local_files() are defined in rules/common.smk
 
 # ───────── PARAMETER SWEEP FUNCTIONS ─────────
 def get_parameter_sweep_outputs():

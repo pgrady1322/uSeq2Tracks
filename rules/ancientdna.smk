@@ -8,7 +8,7 @@ rule ancientdna_map_bwa_aln:
         unpack(get_input_reads),
         ref = f"{GENOME_OUTDIR}/genome/genome.fa"
     output:
-        f"{config['outdir']}/ancientdna/bam/{{sample}}.raw.bam"
+        f"{GENOME_OUTDIR}/ancientdna/bam/{{sample}}.raw.bam"
     params:
         bwa_aln_opts = config.get('ancientdna', {}).get('bwa_aln_opts', '-l 16500')
     threads: config.get('ancientdna', {}).get('threads', config['resources']['mapping_threads'])
@@ -42,7 +42,7 @@ rule ancientdna_map_bwa_mem:
         unpack(get_input_reads),
         ref = f"{GENOME_OUTDIR}/genome/genome.fa"
     output:
-        f"{config['outdir']}/ancientdna/bam/{{sample}}.raw.bam"
+        f"{GENOME_OUTDIR}/ancientdna/bam/{{sample}}.raw.bam"
     params:
         bwa_mem_opts = config.get('ancientdna', {}).get('bwa_mem_opts', '-M')
     threads: config.get('ancientdna', {}).get('threads', config['resources']['mapping_threads'])
@@ -68,10 +68,10 @@ rule ancientdna_map_bwa_mem:
 # Sort and index ancient DNA BAM files
 rule ancientdna_sort_and_index:
     input:
-        f"{config['outdir']}/ancientdna/bam/{{sample}}.raw.bam"
+        f"{GENOME_OUTDIR}/ancientdna/bam/{{sample}}.raw.bam"
     output:
-        bam = f"{config['outdir']}/ancientdna/bam/{{sample}}.sorted.bam",
-        bai = f"{config['outdir']}/ancientdna/bam/{{sample}}.sorted.bam.bai"
+        bam = f"{GENOME_OUTDIR}/ancientdna/bam/{{sample}}.sorted.bam",
+        bai = f"{GENOME_OUTDIR}/ancientdna/bam/{{sample}}.sorted.bam.bai"
     params:
     threads: config.get('ancientdna', {}).get('threads', config['resources']['mapping_threads'])
     shell:
@@ -83,10 +83,10 @@ rule ancientdna_sort_and_index:
 # Remove duplicates (important for ancient DNA)
 rule ancientdna_remove_duplicates:
     input:
-        f"{config['outdir']}/ancientdna/bam/{{sample}}.sorted.bam"
+        f"{GENOME_OUTDIR}/ancientdna/bam/{{sample}}.sorted.bam"
     output:
-        bam = f"{config['outdir']}/ancientdna/bam/{{sample}}.dedup.bam",
-        metrics = f"{config['outdir']}/ancientdna/qc/{{sample}}.dedup.metrics"
+        bam = f"{GENOME_OUTDIR}/ancientdna/bam/{{sample}}.dedup.bam",
+        metrics = f"{GENOME_OUTDIR}/ancientdna/qc/{{sample}}.dedup.metrics"
     threads: config.get('ancientdna', {}).get('threads', config['resources']['mapping_threads'])
     shell:
         """
@@ -98,13 +98,13 @@ rule ancientdna_remove_duplicates:
 # Ancient DNA damage pattern analysis with mapDamage2
 rule ancientdna_damage_analysis:
     input:
-        bam = f"{config['outdir']}/ancientdna/bam/{{sample}}.dedup.bam" if config.get('ancientdna', {}).get('markdup', True) else f"{config['outdir']}/ancientdna/bam/{{sample}}.sorted.bam",
+        bam = f"{GENOME_OUTDIR}/ancientdna/bam/{{sample}}.dedup.bam" if config.get('ancientdna', {}).get('markdup', True) else f"{GENOME_OUTDIR}/ancientdna/bam/{{sample}}.sorted.bam",
         ref = f"{GENOME_OUTDIR}/genome/genome.fa"
     output:
-        stats = f"{config['outdir']}/ancientdna/damage/{{sample}}/3pGtoA_freq.txt",
-        plot = f"{config['outdir']}/ancientdna/damage/{{sample}}/Fragmisincorporation_plot.pdf"
+        stats = f"{GENOME_OUTDIR}/ancientdna/damage/{{sample}}/3pGtoA_freq.txt",
+        plot = f"{GENOME_OUTDIR}/ancientdna/damage/{{sample}}/Fragmisincorporation_plot.pdf"
     params:
-        outdir = f"{config['outdir']}/ancientdna/damage/{{sample}}"
+        outdir = f"{GENOME_OUTDIR}/ancientdna/damage/{{sample}}"
     shell:
         """
         mkdir -p {params.outdir}
@@ -114,10 +114,10 @@ rule ancientdna_damage_analysis:
 # Variant calling optimized for ancient DNA with low coverage
 rule ancientdna_variant_calling:
     input:
-        bam = f"{config['outdir']}/ancientdna/bam/{{sample}}.dedup.bam" if config.get('ancientdna', {}).get('markdup', True) else f"{config['outdir']}/ancientdna/bam/{{sample}}.sorted.bam",
+        bam = f"{GENOME_OUTDIR}/ancientdna/bam/{{sample}}.dedup.bam" if config.get('ancientdna', {}).get('markdup', True) else f"{GENOME_OUTDIR}/ancientdna/bam/{{sample}}.sorted.bam",
         ref = f"{GENOME_OUTDIR}/genome/genome.fa"
     output:
-        f"{config['outdir']}/ancientdna/variants/{{sample}}.vcf.gz"
+        f"{GENOME_OUTDIR}/ancientdna/variants/{{sample}}.vcf.gz"
     params:
         min_mapq = config.get('ancientdna', {}).get('min_mapq', 20),
         min_baseq = config.get('ancientdna', {}).get('min_baseq', 20)
@@ -133,13 +133,13 @@ rule ancientdna_variant_calling:
 # Ancient DNA authentication with ANGSD
 rule ancientdna_authentication:
     input:
-        bam = f"{config['outdir']}/ancientdna/bam/{{sample}}.dedup.bam" if config.get('ancientdna', {}).get('markdup', True) else f"{config['outdir']}/ancientdna/bam/{{sample}}.sorted.bam",
+        bam = f"{GENOME_OUTDIR}/ancientdna/bam/{{sample}}.dedup.bam" if config.get('ancientdna', {}).get('markdup', True) else f"{GENOME_OUTDIR}/ancientdna/bam/{{sample}}.sorted.bam",
         ref = f"{GENOME_OUTDIR}/genome/genome.fa"
     output:
-        depth = f"{config['outdir']}/ancientdna/auth/{{sample}}.depthSample",
-        stats = f"{config['outdir']}/ancientdna/auth/{{sample}}.stats"
+        depth = f"{GENOME_OUTDIR}/ancientdna/auth/{{sample}}.depthSample",
+        stats = f"{GENOME_OUTDIR}/ancientdna/auth/{{sample}}.stats"
     params:
-        outdir = f"{config['outdir']}/ancientdna/auth",
+        outdir = f"{GENOME_OUTDIR}/ancientdna/auth",
         prefix = "{sample}"
     threads: config.get('ancientdna', {}).get('threads', config['resources']['mapping_threads'])
     shell:
@@ -154,10 +154,10 @@ rule ancientdna_authentication:
 # Convert ancient DNA BAM to BigWig for visualization
 rule ancientdna_bam_to_bigwig:
     input:
-        bam = f"{config['outdir']}/ancientdna/bam/{{sample}}.dedup.bam" if config.get('ancientdna', {}).get('markdup', True) else f"{config['outdir']}/ancientdna/bam/{{sample}}.sorted.bam",
+        bam = f"{GENOME_OUTDIR}/ancientdna/bam/{{sample}}.dedup.bam" if config.get('ancientdna', {}).get('markdup', True) else f"{GENOME_OUTDIR}/ancientdna/bam/{{sample}}.sorted.bam",
         fai = f"{GENOME_OUTDIR}/genome/genome.fa.fai"
     output:
-        f"{config['outdir']}/ancientdna/bigwig/{{sample}}.bw"
+        f"{GENOME_OUTDIR}/ancientdna/bigwig/{{sample}}.bw"
     params:
         normalize = config.get('ancientdna', {}).get('bw_norm', 'CPM')
     threads: config.get('ancientdna', {}).get('threads', config['resources']['mapping_threads'])
@@ -172,9 +172,9 @@ rule ancientdna_bam_to_bigwig:
 # Complete ancient DNA pipeline marker
 rule ancientdna_complete:
     input:
-        expand(f"{config['outdir']}/ancientdna/bam/{{sample}}.dedup.bam", sample=ADNA_SAMPLES) if config.get('ancientdna', {}).get('markdup', True) else expand(f"{config['outdir']}/ancientdna/bam/{{sample}}.sorted.bam", sample=ADNA_SAMPLES),
-        expand(f"{config['outdir']}/ancientdna/bigwig/{{sample}}.bw", sample=ADNA_SAMPLES),
-        expand(f"{config['outdir']}/ancientdna/damage/{{sample}}/3pGtoA_freq.txt", sample=ADNA_SAMPLES)
+        expand(f"{GENOME_OUTDIR}/ancientdna/bam/{{sample}}.dedup.bam", sample=ADNA_SAMPLES) if config.get('ancientdna', {}).get('markdup', True) else expand(f"{GENOME_OUTDIR}/ancientdna/bam/{{sample}}.sorted.bam", sample=ADNA_SAMPLES),
+        expand(f"{GENOME_OUTDIR}/ancientdna/bigwig/{{sample}}.bw", sample=ADNA_SAMPLES),
+        expand(f"{GENOME_OUTDIR}/ancientdna/damage/{{sample}}/3pGtoA_freq.txt", sample=ADNA_SAMPLES)
     output:
         f"{GENOME_OUTDIR}/ancientdna/tracks_complete.txt"
     params:
