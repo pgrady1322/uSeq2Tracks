@@ -4,12 +4,18 @@
 # Universal Sequencing-to-Genome Pipeline
 # Converts heterogeneous sequencing data to UCSC-ready tracks
 
-import pandas as pd
+from __future__ import annotations
+
 import os
 from pathlib import Path
 
+import pandas as pd
+
 # ───────── CONFIGURATION ─────────
 configfile: "config.yaml"
+
+# Validate config against JSON-schema
+validate(config, schema="schemas/config.schema.yaml")
 
 # ───────── CONFIGURATION VALIDATION ─────────
 # Ensure required genome_id is set
@@ -21,8 +27,9 @@ if not config.get("genome_id") or config["genome_id"].strip() == "":
         "This will be used to tag all output files and directories."
     )
 
-# Clean genome_id (remove any problematic characters)
-GENOME_ID = config["genome_id"].strip().replace(" ", "_")
+# Clean genome_id (remove problematic / shell-unsafe characters)
+import re as _re
+GENOME_ID = _re.sub(r"[^\w.-]", "_", config["genome_id"].strip())
 print(f"Pipeline running with genome ID: {GENOME_ID}")
 
 # Check for rapid mode
@@ -80,55 +87,35 @@ if 'replicate_group' in samples_df.columns:
         REPLICATE_GROUPS[sample_type] = type_samples.groupby('replicate_group')['sample_id'].apply(list).to_dict()
 
 # ───────── CONFIG DEFAULTS ─────────
-# Ensure all pipeline configs exist with defaults
-config.setdefault('atacseq', {})
-config['atacseq'].setdefault('threads', config['resources']['mapping_threads'])
-config['atacseq'].setdefault('bowtie2_opts', '--very-sensitive')
-config['atacseq'].setdefault('bwa_mem2_opts', '-M')
-config['atacseq'].setdefault('shift', -75)
-config['atacseq'].setdefault('extsize', 150)
-config['atacseq'].setdefault('macs3_opts', '')
-config['atacseq'].setdefault('bw_norm', 'CPM')
+# Data-driven defaults per assay — avoids 50+ repetitive setdefault lines.
+_MAPPING_THREADS = config.get('resources', {}).get('mapping_threads', 8)
 
-config.setdefault('wgs', {})
-config['wgs'].setdefault('threads', config['resources']['mapping_threads'])
-config['wgs'].setdefault('mapper', 'bwa_mem2')
-config['wgs'].setdefault('bowtie2_opts', '--very-sensitive')
-config['wgs'].setdefault('bwa_mem2_opts', '-M')
-config['wgs'].setdefault('bw_norm', 'CPM')
+_ASSAY_DEFAULTS: dict[str, dict] = {
+    "atacseq":    {"threads": _MAPPING_THREADS, "bowtie2_opts": "--very-sensitive",
+                   "bwa_mem2_opts": "-M", "shift": -75, "extsize": 150,
+                   "macs3_opts": "", "bw_norm": "CPM"},
+    "wgs":        {"threads": _MAPPING_THREADS, "mapper": "bwa_mem2",
+                   "bowtie2_opts": "--very-sensitive", "bwa_mem2_opts": "-M",
+                   "bw_norm": "CPM"},
+    "cutrun":     {"threads": _MAPPING_THREADS, "bowtie2_opts": "--very-sensitive",
+                   "bwa_mem2_opts": "-M", "shift": 0, "extsize": 160,
+                   "macs3_opts": "", "bw_norm": "CPM"},
+    "rnaseq":     {"threads": _MAPPING_THREADS,
+                   "star_opts": "--outFilterMultimapNmax 20", "bw_norm": "CPM"},
+    "nanopore":   {"threads": _MAPPING_THREADS,
+                   "minimap2_opts": "--secondary=no", "bw_norm": "CPM"},
+    "pacbio":     {"threads": _MAPPING_THREADS,
+                   "minimap2_opts": "--secondary=no", "bw_norm": "CPM"},
+    "ancientdna": {"threads": _MAPPING_THREADS, "mapper": "bwa_aln",
+                   "bwa_aln_opts": "-l 1024 -n 0.01 -o 2",
+                   "bwa_mem_opts": "-M", "min_mapq": 30, "min_baseq": 20,
+                   "bw_norm": "CPM"},
+}
 
-config.setdefault('cutrun', {})
-config['cutrun'].setdefault('threads', config['resources']['mapping_threads'])
-config['cutrun'].setdefault('bowtie2_opts', '--very-sensitive')
-config['cutrun'].setdefault('bwa_mem2_opts', '-M')
-config['cutrun'].setdefault('shift', 0)
-config['cutrun'].setdefault('extsize', 160)
-config['cutrun'].setdefault('macs3_opts', '')
-config['cutrun'].setdefault('bw_norm', 'CPM')
-
-config.setdefault('rnaseq', {})
-config['rnaseq'].setdefault('threads', config['resources']['mapping_threads'])
-config['rnaseq'].setdefault('star_opts', '--outFilterMultimapNmax 20')
-config['rnaseq'].setdefault('bw_norm', 'CPM')
-
-config.setdefault('nanopore', {})
-config['nanopore'].setdefault('threads', config['resources']['mapping_threads'])
-config['nanopore'].setdefault('minimap2_opts', '--secondary=no')
-config['nanopore'].setdefault('bw_norm', 'CPM')
-
-config.setdefault('pacbio', {})
-config['pacbio'].setdefault('threads', config['resources']['mapping_threads'])
-config['pacbio'].setdefault('minimap2_opts', '--secondary=no')
-config['pacbio'].setdefault('bw_norm', 'CPM')
-
-config.setdefault('ancientdna', {})
-config['ancientdna'].setdefault('threads', config['resources']['mapping_threads'])
-config['ancientdna'].setdefault('mapper', 'bwa_aln')
-config['ancientdna'].setdefault('bwa_aln_opts', '-l 1024 -n 0.01 -o 2')
-config['ancientdna'].setdefault('bwa_mem_opts', '-M')
-config['ancientdna'].setdefault('min_mapq', 30)
-config['ancientdna'].setdefault('min_baseq', 20)
-config['ancientdna'].setdefault('bw_norm', 'CPM')
+for _assay, _defaults in _ASSAY_DEFAULTS.items():
+    config.setdefault(_assay, {})
+    for _key, _val in _defaults.items():
+        config[_assay].setdefault(_key, _val)
 
 # Get samples by type (with empty defaults)
 WGS_SAMPLES = SAMPLE_TYPES.get("wgs", [])
@@ -174,8 +161,13 @@ include: "rules/genrich.smk"
 # NOTE: is_valid_sra_id() and has_local_files() are defined in rules/common.smk
 
 # ───────── PARAMETER SWEEP FUNCTIONS ─────────
-def get_parameter_sweep_outputs():
-    """Get all parameter sweep outputs if enabled"""
+def get_parameter_sweep_outputs() -> list[str]:
+    """Return peak file paths for every (sample, q-value) combination.
+
+    Returns:
+        List of expected narrowPeak file paths (empty when sweeps are
+        disabled in the config).
+    """
     if not config.get('parameter_sweep', {}).get('enabled', False):
         return []
     
@@ -206,12 +198,14 @@ def get_parameter_sweep_outputs():
     
     return outputs
 
-def format_qvalue_for_filename(qval):
-    """Convert q-value to filename-safe string"""
-    return str(qval).replace('.', '')
 
-def get_genrich_outputs():
-    """Get Genrich outputs if enabled"""
+def get_genrich_outputs() -> list[str]:
+    """Return Genrich peak-calling output paths.
+
+    Returns:
+        List of expected Genrich output paths (empty when Genrich is
+        disabled in the config).
+    """
     outputs = []
     
     # Standard Genrich outputs
@@ -226,7 +220,8 @@ def get_genrich_outputs():
             if assay not in REPLICATE_GROUPS:
                 continue
                 
-            assay_samples = globals().get(f"{assay.upper()}_SAMPLES", [])
+            _type_map = {"atacseq": ATACSEQ_SAMPLES, "cutrun": CUTRUN_SAMPLES, "chipseq": CHIPSEQ_SAMPLES}
+            assay_samples = _type_map.get(assay, [])
             if not assay_samples:
                 continue
                 
@@ -241,8 +236,13 @@ def get_genrich_outputs():
     return outputs
 
 # ───────── SRA DOWNLOAD FUNCTIONS AND RULES ─────────
-def get_sra_download_inputs():
-    """Get all SRA download inputs - assume paired-end format for all SRA samples"""
+def get_sra_download_inputs() -> list[str]:
+    """Return expected FASTQ paths for all SRA-sourced samples.
+
+    Returns:
+        List of ``data/raw/{sample}_R{1,2}.fastq.gz`` paths for every
+        sample that uses SRA and lacks local files.
+    """
     inputs = []
     for sample in SAMPLES.keys():
         sample_info = SAMPLES[sample]
@@ -311,9 +311,13 @@ rule rapid_tracks_complete:
             f.write(f"📁 Rapid mode summary directory: {GENOME_OUTDIR}/rapid/\n")
 
 # ───────── WORKFLOW VALIDATION ─────────
-# ───────── WORKFLOW VALIDATION ─────────
-def validate_configuration():
-    """Validate pipeline configuration and samples with robust data source detection"""
+def validate_configuration() -> None:
+    """Validate pipeline configuration and print a data-source summary.
+
+    Raises:
+        ValueError: When required columns are missing, sample IDs are
+            duplicated, or samples lack both SRA and local data sources.
+    """
     issues = []
     warnings = []
     
