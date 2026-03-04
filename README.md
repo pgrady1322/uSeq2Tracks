@@ -1,5 +1,6 @@
 # uSeq2Tracks: Universal Sequencing to Browser Tracks Pipeline
 
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/pgrady1322/uSeq2Tracks/releases)
 [![CI](https://github.com/pgrady1322/uSeq2Tracks/actions/workflows/ci.yml/badge.svg)](https://github.com/pgrady1322/uSeq2Tracks/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/useq2tracks)](https://pypi.org/project/useq2tracks/)
 [![Snakemake](https://img.shields.io/badge/snakemake-≥6.0.0-brightgreen.svg)](https://snakemake.github.io)
@@ -20,7 +21,7 @@ uSeq2Tracks is designed to standardize the processing of heterogeneous sequencin
 ### Key Features
 
 - **Universal Input Support**: Handles both local FASTQ files and SRA accessions
-- **Multiple Assay Types**: ChIP-seq, ATAC-seq, CUT&RUN, RNA-seq, WGS, Ancient DNA, Long-reads
+- **Multiple Assay Types**: ChIP-seq, ATAC-seq, CUT&RUN, RNA-seq, WGS, Long-reads, etc.
 - **Two Processing Modes**: Standard (full QC) and Rapid (streamlined for public data)
 - **Genome-ID Organization**: All outputs tagged with unique genome identifiers
 - **UCSC Integration**: Automatic track hub generation for browser visualization

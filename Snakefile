@@ -1,5 +1,5 @@
 # ============================================================
-# uSeq2Tracks – Snakefile (Snakemake)  •  v0.5.0
+# uSeq2Tracks – Snakefile (Snakemake)  •  v1.0.0
 # ============================================================
 # Universal Sequencing-to-Genome Pipeline
 # Converts heterogeneous sequencing data to UCSC-ready tracks

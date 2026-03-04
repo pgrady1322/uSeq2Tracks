@@ -8,14 +8,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "useq2tracks"
-version = "0.5.0"
+version = "1.0.0"
 description = "Universal Sequencing-to-Genome-Browser-Tracks Pipeline"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [{ name = "Patrick Grady" }]
 readme = "README.md"
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
