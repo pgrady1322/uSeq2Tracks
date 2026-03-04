@@ -1,15 +1,12 @@
-"""Tests for bin/generate_ucsc_hub.py"""
+"""Tests for useq2tracks.generate_ucsc_hub."""
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "bin"))
-
-from generate_ucsc_hub import (
+from useq2tracks.generate_ucsc_hub import (
     TRACK_COLORS,
     main,
     parse_args,

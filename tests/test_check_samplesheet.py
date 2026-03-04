@@ -1,18 +1,13 @@
-"""Tests for bin/check_samplesheet.py"""
+"""Tests for useq2tracks.check_samplesheet."""
 
 from __future__ import annotations
 
 import csv
-
-# The script lives in bin/ — import by manipulating sys.path lazily.
-import sys
 from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "bin"))
-
-from check_samplesheet import (
+from useq2tracks.check_samplesheet import (
     INVALID_SENTINELS,
     VALID_ASSAY_TYPES,
     SamplesheetError,

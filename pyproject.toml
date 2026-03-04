@@ -1,9 +1,10 @@
 # ============================================================
-# uSeq2Tracks – project metadata & tool config
+# uSeq2Tracks – project metadata & build config
 # ============================================================
-# This is NOT a pip-installable package (it's a Snakemake pipeline).
-# pyproject.toml is used here solely for tool configuration (ruff,
-# pytest, mypy) and CI convenience.
+
+[build-system]
+requires = ["setuptools>=68", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "useq2tracks"
@@ -13,12 +14,37 @@ requires-python = ">=3.10"
 license = "MIT"
 authors = [{ name = "Patrick Grady" }]
 readme = "README.md"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+keywords = ["bioinformatics", "genomics", "ucsc", "snakemake", "pipeline"]
+
+[project.urls]
+Homepage = "https://github.com/pgrady1322/uSeq2Tracks"
+Repository = "https://github.com/pgrady1322/uSeq2Tracks"
+Issues = "https://github.com/pgrady1322/uSeq2Tracks/issues"
+
+[project.scripts]
+useq2tracks-check-samplesheet = "useq2tracks.check_samplesheet:main"
+useq2tracks-generate-hub = "useq2tracks.generate_ucsc_hub:main"
+
+# ── Package discovery ─────────────────────────────────────────
+[tool.setuptools.packages.find]
+where = ["src"]
 
 # ── Ruff ──────────────────────────────────────────────────────
 [tool.ruff]
 target-version = "py310"
 line-length = 100
-src = ["bin", "tests"]
+src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = [
@@ -36,12 +62,11 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["bin"]
+known-first-party = ["useq2tracks"]
 
 # ── Pytest ────────────────────────────────────────────────────
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]
 addopts = "-v --tb=short"
 
 # ── MyPy ──────────────────────────────────────────────────────

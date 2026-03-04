@@ -11,6 +11,9 @@ __pycache__/
 *.pyo
 *.egg-info/
 .cache/
+dist/
+build/
+*.egg
 
 # ── Data (downloaded/generated) ──
 data/raw/
@@ -20,3 +23,4 @@ data/raw/
 .vscode/
 *.swp
 *.swo
+.coverage

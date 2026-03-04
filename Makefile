@@ -6,27 +6,27 @@ help: ## Show this help
 
 # ── Quality ───────────────────────────────────────────────────
 lint: ## Run ruff linter
-	ruff check bin/ tests/
+	ruff check src/ tests/
 
 format: ## Auto-format with ruff
-	ruff format bin/ tests/
-	ruff check --fix bin/ tests/
+	ruff format src/ tests/
+	ruff check --fix src/ tests/
 
 check: ## Lint + format check (no changes)
-	ruff format --check bin/ tests/
-	ruff check bin/ tests/
+	ruff format --check src/ tests/
+	ruff check src/ tests/
 
-typecheck: ## Run mypy on bin/
-	mypy bin/
+typecheck: ## Run mypy on src/
+	mypy src/
 
 # ── Tests ─────────────────────────────────────────────────────
 test: ## Run pytest
 	pytest
 
 test-cov: ## Run pytest with coverage
-	pytest --cov=bin --cov-report=term-missing
+	pytest --cov=useq2tracks --cov-report=term-missing
 
 # ── Misc ──────────────────────────────────────────────────────
 clean: ## Remove caches and build artifacts
-	rm -rf .ruff_cache .mypy_cache .pytest_cache __pycache__
+	rm -rf .ruff_cache .mypy_cache .pytest_cache __pycache__ dist/ build/ *.egg-info
 	find . -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true

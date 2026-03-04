@@ -1,8 +1,10 @@
 # uSeq2Tracks: Universal Sequencing to Browser Tracks Pipeline
 
+[![CI](https://github.com/pgrady1322/uSeq2Tracks/actions/workflows/ci.yml/badge.svg)](https://github.com/pgrady1322/uSeq2Tracks/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/useq2tracks)](https://pypi.org/project/useq2tracks/)
 [![Snakemake](https://img.shields.io/badge/snakemake-≥6.0.0-brightgreen.svg)](https://snakemake.github.io)
 [![Nextflow DSL2](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A521.10.3-23aa62.svg?labelColor=000000)](https://www.nextflow.io/)
-[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/python-≥3.10-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 A comprehensive pipeline for processing diverse sequencing datasets and generating standardized genomic tracks for UCSC Genome Browser visualization. uSeq2Tracks handles everything from raw sequencing data to publication-ready browser tracks with minimal user intervention.
@@ -43,13 +45,19 @@ uSeq2Tracks is designed to standardize the processing of heterogeneous sequencin
 ### 1. Installation
 
 ```bash
-# Clone the repository
+# Install the Python helper utilities from PyPI
+pip install useq2tracks
+
+# Clone the repository (for the Snakemake / Nextflow pipeline files)
 git clone https://github.com/pgrady1322/uSeq2Tracks.git
 cd uSeq2Tracks
 
-# Install dependencies with conda/mamba
+# Install bioinformatics dependencies with conda/mamba
 conda env create -f envs/useq2tracks.yml
 conda activate useq2tracks
+
+# Or install the helpers in editable mode for development
+pip install -e .
 ```
 
 ### 2. Configuration
