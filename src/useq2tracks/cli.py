@@ -6,6 +6,9 @@ run       Execute the pipeline (Snakemake *or* Nextflow).
 validate  Check samplesheet + config without running anything.
 hub       Generate a UCSC track-hub from existing bigWig/peak files.
 info      Print version, detected samples and assay types.
+
+Author: Patrick Grady
+License: MIT License – See LICENSE
 """
 
 from __future__ import annotations

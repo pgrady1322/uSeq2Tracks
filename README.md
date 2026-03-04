@@ -1022,14 +1022,16 @@ rapid_mode: false
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome! To get started:
 
-### Development Setup
 ```bash
 git clone https://github.com/pgrady1322/uSeq2Tracks.git
 cd uSeq2Tracks
-conda env create -f envs/development.yml
-conda activate useq2tracks-dev
+conda env create -f envs/useq2tracks.yml
+conda activate useq2tracks
+pip install -e ".[dev]"
+make test        # run tests
+make check       # lint + format check
 ```
 
 ## 📄 License
@@ -1047,8 +1049,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 If you use uSeq2Tracks in your research, please cite:
 
 ```
-Patrick Grady (2025). uSeq2Tracks: A universal pipeline for sequencing data to genome browser tracks. 
-Journal Name, Volume(Issue), pages. DOI: 10.xxxx/xxxxx
+Patrick Grady (2026). uSeq2Tracks: A universal pipeline for sequencing
+data to genome browser tracks. https://github.com/pgrady1322/uSeq2Tracks
 ```
 
 ## 🙏 Acknowledgments

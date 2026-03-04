@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-uSeq2Tracks v1.0.0
+uSeq2Tracks v0.5.0
 
 Server environment diagnostic — checks compute resources and dependencies.
 
@@ -109,5 +109,5 @@ print("1. Check genome_id in config.yaml")
 print("2. Check outdir path in config.yaml") 
 print("3. Make sure you're running from the correct directory")
 
-# uSeq2Tracks v1.0.0
+# uSeq2Tracks v0.5.0
 # Any usage is subject to this software's license.

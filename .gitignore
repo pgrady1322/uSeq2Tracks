@@ -4,6 +4,14 @@ results/
 .nextflow/
 .nextflow.log*
 .snakemake/
+logs/
+benchmarks/
+
+# ── Nextflow reports ──
+report-*.html
+timeline-*.html
+trace-*.txt
+dag-*.svg
 
 # ── Python ──
 __pycache__/
@@ -14,9 +22,21 @@ __pycache__/
 dist/
 build/
 *.egg
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
 
 # ── Data (downloaded/generated) ──
 data/raw/
+
+# ── Genomics intermediates ──
+*.bam
+*.bai
+*.bw
+*.bigWig
+*.bigwig
+*.narrowPeak
+*.bedGraph
 
 # ── OS / IDE ──
 .DS_Store
