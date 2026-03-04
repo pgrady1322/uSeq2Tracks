@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/pgrady1322/uSeq2Tracks/releases)
 [![CI](https://github.com/pgrady1322/uSeq2Tracks/actions/workflows/ci.yml/badge.svg)](https://github.com/pgrady1322/uSeq2Tracks/actions/workflows/ci.yml)
-[![PyPI](https://img.shields.io/pypi/v/useq2tracks)](https://pypi.org/project/useq2tracks/)
+[![PyPI version](https://badge.fury.io/py/useq2tracks.svg)](https://badge.fury.io/py/useq2tracks)
 [![Snakemake](https://img.shields.io/badge/snakemake-≥6.0.0-brightgreen.svg)](https://snakemake.github.io)
 [![Nextflow DSL2](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A521.10.3-23aa62.svg?labelColor=000000)](https://www.nextflow.io/)
 [![Python](https://img.shields.io/badge/python-≥3.10-blue.svg)](https://www.python.org/downloads/)
