@@ -97,16 +97,47 @@ ENCODE_Input,chipseq,SRR1536406,,,H3K27ac,input,input
 ### 4. Run the Pipeline
 
 ```bash
-# Execute with the provided script
-./Executor.sh
+# ── Using the useq2tracks CLI (recommended) ──
 
-# Or run directly with Snakemake
-snakemake --use-conda --jobs 100
+# Snakemake (default engine)
+useq2tracks run                              # all cores, config.yaml
+useq2tracks run --cores 16                   # limit to 16 cores
+useq2tracks run --dryrun                     # preview what will run
+useq2tracks run --rapid                      # skip QC, essential tracks only
+useq2tracks run --profile slurm              # submit to SLURM
+useq2tracks run --resume                     # resume interrupted run
+
+# Nextflow
+useq2tracks run --engine nextflow
+useq2tracks run --engine nextflow --profile docker
+useq2tracks run --engine nextflow --resume
+
+# Forward extra engine-specific flags after '--'
+useq2tracks run -- --printshellcmds          # Snakemake shell echo
+useq2tracks run --engine nextflow -- -with-tower   # Nextflow Tower
+
+# ── Other CLI subcommands ──
+
+# Validate inputs before running
+useq2tracks validate samples.csv --configfile config.yaml
+
+# Show pipeline info
+useq2tracks info
+
+# Generate a standalone UCSC track hub
+useq2tracks hub --genome-id galGal6 --hub-name MyHub \
+  --hub-short-label "My Hub" --hub-long-label "My Sequencing Hub" \
+  --genome-name galGal6 --hub-email user@example.com \
+  --bigwigs *.bw --output-dir ucsc_hub/
+
+# ── Or invoke engines directly (advanced) ──
+snakemake --use-conda --cores all
+nextflow run main.nf -profile docker --genome_id galGal6
 ```
 
 ---
 
-## 🔄 Nextflow Implementation (New!)
+## 🔄 Nextflow Implementation
 
 uSeq2Tracks is now available as a **Nextflow DSL2** pipeline with improved scalability, cloud integration, and HPC support. The Nextflow version provides all core functionality with enhanced portability and parallelization.
 
