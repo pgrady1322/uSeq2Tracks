@@ -2,166 +2,239 @@
 # Common utility functions and rules
 # ============================================================
 
+import gzip
 import os
+
 import pandas as pd
 from pathlib import Path
 
-def is_valid_sra_id(sra_id):
-    """
-    Robust check for valid SRA ID that handles all edge cases:
-    - None, NaN, empty strings, whitespace
-    - Various pandas representations of missing data
-    - String representations of NaN
+# ── Shared sentinel values ────────────────────────────────────────
+# Canonical set of strings that should be treated as "missing / NA".
+# Used by is_valid_sra_id(), has_local_files(), and get_trimmed_reads().
+INVALID_SENTINELS: set[str] = frozenset(
+    {"", "nan", "NaN", "none", "None", "null", "NULL", "<NA>", "N/A", "n/a"}
+)
+
+
+def is_valid_sra_id(sra_id: object) -> bool:
+    """Check whether *sra_id* is a meaningful SRA accession.
+
+    Handles ``None``, pandas ``NaN``, empty strings, whitespace, and
+    common textual representations of missing data.
+
+    Args:
+        sra_id: Value from the samplesheet's ``sra_id`` column.
+
+    Returns:
+        ``True`` if *sra_id* looks like a real accession (e.g. SRR…).
     """
     if sra_id is None:
         return False
-    
-    # Handle pandas NaN values
     if pd.isna(sra_id):
         return False
-        
-    # Convert to string and check various empty/invalid representations
-    sra_str = str(sra_id).strip()
-    invalid_values = {'', 'nan', 'NaN', 'none', 'None', 'null', 'NULL', '<NA>', 'N/A', 'n/a'}
-    
-    return sra_str not in invalid_values and len(sra_str) > 0
+    return str(sra_id).strip() not in INVALID_SENTINELS
 
-def has_local_files(sample_info):
-    """Check if sample has valid local file paths"""
-    read1 = sample_info.get('read1', '')
-    read2 = sample_info.get('read2', '')
-    
-    # At minimum, read1 should exist and be a valid path
-    if not read1 or pd.isna(read1) or str(read1).strip() in {'', 'nan', 'NaN', 'none'}:
+
+def has_local_files(sample_info: dict) -> bool:
+    """Check whether *sample_info* contains a valid local ``read1`` path.
+
+    Args:
+        sample_info: Row dict from the parsed samplesheet.
+
+    Returns:
+        ``True`` when a non-sentinel ``read1`` value is present.
+    """
+    read1 = sample_info.get("read1", "")
+    if not read1 or pd.isna(read1):
         return False
-    
-    return True
+    return str(read1).strip() not in INVALID_SENTINELS
 
-def get_sample_reads(wildcards):
-    """Get input reads for a sample - auto-detect layout for SRA samples"""
+
+def get_sample_reads(wildcards) -> dict[str, str]:
+    """Return input read paths for *wildcards.sample*.
+
+    Priority: local files first, then SRA downloads.  For SRA data the
+    function auto-detects single-end vs paired-end by inspecting whether
+    the R2 file is a placeholder.
+
+    Args:
+        wildcards: Snakemake wildcards (must include ``sample``).
+
+    Returns:
+        Dict with ``"r1"`` (and optionally ``"r2"``) mapped to file paths.
+
+    Raises:
+        KeyError: If ``wildcards.sample`` is not found in ``SAMPLES``.
+        ValueError: If the sample lacks both local files and an SRA ID.
+    """
+    if wildcards.sample not in SAMPLES:
+        raise KeyError(
+            f"Sample '{wildcards.sample}' not found in the samplesheet. "
+            f"Known samples: {list(SAMPLES.keys())[:10]}"
+        )
     sample_info = SAMPLES[wildcards.sample]
-    
-    # Check data source priority: local files first, then SRA
+
+    # ── Local files (highest priority) ──
     if has_local_files(sample_info):
-        # Use local files
-        reads = {"r1": sample_info["read1"]}
-        if 'read2' in sample_info and sample_info['read2']:
-            read2 = sample_info['read2']
-            # Check if read2 is valid (not empty/nan)
-            if not pd.isna(read2) and str(read2).strip() not in {'', 'nan', 'NaN', 'none'}:
-                reads["r2"] = read2
+        reads: dict[str, str] = {"r1": sample_info["read1"]}
+        read2 = sample_info.get("read2", "")
+        if read2 and not pd.isna(read2) and str(read2).strip() not in INVALID_SENTINELS:
+            reads["r2"] = read2
         return reads
-    
-    elif is_valid_sra_id(sample_info.get('sra_id', '')):
-        # Use SRA data - assume paired-end and auto-detect actual layout
+
+    # ── SRA data ──
+    if is_valid_sra_id(sample_info.get("sra_id", "")):
         r2_file = f"data/raw/{wildcards.sample}_R2.fastq.gz"
-        
-        # Check if R2 file is a single-end placeholder (created when SRA data is actually single-end)
+
         if os.path.exists(r2_file):
             try:
-                import gzip
-                with gzip.open(r2_file, 'rt') as f:
-                    first_line = f.readline().strip()
+                with gzip.open(r2_file, "rt") as fh:
+                    first_line = fh.readline().strip()
                     if first_line == "# SINGLE_END_PLACEHOLDER":
-                        # Actually single-end, return only R1
                         return {"r1": f"data/raw/{wildcards.sample}_R1.fastq.gz"}
-            except:
-                # If R2 file is small (< 100 bytes), likely a placeholder
+            except (OSError, gzip.BadGzipFile):
+                # If R2 is tiny it's likely a placeholder
                 if os.path.getsize(r2_file) < 100:
                     return {"r1": f"data/raw/{wildcards.sample}_R1.fastq.gz"}
-                pass  # If we can't read it, assume it's a real paired file
-        
-        # Default: assume paired-end (will be auto-detected during download)
+
+        # Default: assume paired-end
         return {
             "r1": f"data/raw/{wildcards.sample}_R1.fastq.gz",
-            "r2": r2_file
+            "r2": r2_file,
         }
-    
-    else:
-        raise ValueError(f"Sample {wildcards.sample} has neither valid local files nor valid SRA ID. "
-                        f"read1: {sample_info.get('read1', 'missing')}, "
-                        f"sra_id: {sample_info.get('sra_id', 'missing')}")
 
-def get_genome_indices():
-    """Get all genome index files"""
+    raise ValueError(
+        f"Sample '{wildcards.sample}' has neither valid local files nor a valid SRA ID. "
+        f"read1={sample_info.get('read1', 'missing')}, "
+        f"sra_id={sample_info.get('sra_id', 'missing')}"
+    )
+
+
+def get_genome_indices() -> dict[str, str]:
+    """Return a dict of genome index files needed for the current sample set.
+
+    Keys are descriptive labels (``fai``, ``bwa_mem2``, ``star``, …);
+    values are paths under ``GENOME_OUTDIR``.
+
+    Returns:
+        Mapping of index label → expected file path.
+    """
     genome_base = Path(config["genome"]).stem
-    indices = {
+    indices: dict[str, str] = {
         "fai": f"{GENOME_OUTDIR}/genome/{genome_base}.fa.fai",
-        "dict": f"{GENOME_OUTDIR}/genome/{genome_base}.dict"
+        "dict": f"{GENOME_OUTDIR}/genome/{genome_base}.dict",
     }
-    
-    # Add mapper-specific indices based on what samples we have
+
     if WGS_SAMPLES or CHIPSEQ_SAMPLES or CUTRUN_SAMPLES or ATACSEQ_SAMPLES:
         indices["bwa_mem2"] = f"{GENOME_OUTDIR}/genome/bwa_mem2/{genome_base}.fa.0123"
         indices["bowtie2"] = f"{GENOME_OUTDIR}/genome/bowtie2/{genome_base}.1.bt2"
-    
+
     if RNASEQ_SAMPLES:
         indices["star"] = f"{GENOME_OUTDIR}/genome/star/SA"
         indices["hisat2"] = f"{GENOME_OUTDIR}/genome/hisat2/{genome_base}.1.ht2"
-    
+
     if NANOPORE_SAMPLES or PACBIO_SAMPLES:
         indices["minimap2"] = f"{GENOME_OUTDIR}/genome/minimap2/{genome_base}.mmi"
-    
+
     if ADNA_SAMPLES:
         indices["bwa_aln"] = f"{GENOME_OUTDIR}/genome/bwa_aln/{genome_base}.fa.bwt"
-    
+
     return indices
 
-def get_samples_by_type(assay_type):
-    """Get all samples of a specific assay type"""
-    return [s for s, info in SAMPLES.items() if info.get('type') == assay_type]
 
-def get_control_for_sample(wildcards):
-    """Get control sample for ChIP-seq/CUT&RUN analysis"""
+def get_samples_by_type(assay_type: str) -> list[str]:
+    """Return sample IDs for a given assay type.
+
+    Args:
+        assay_type: One of the recognised assay strings (e.g. ``"atacseq"``).
+
+    Returns:
+        List of matching sample IDs (may be empty).
+    """
+    return [s for s, info in SAMPLES.items() if info.get("type") == assay_type]
+
+
+def get_control_for_sample(wildcards) -> str | list:
+    """Find the control BAM for a ChIP-seq / CUT&RUN sample.
+
+    The control is identified by matching the ``condition`` field with the
+    ``control_tag`` suffix from the config.
+
+    Args:
+        wildcards: Snakemake wildcards (must include ``sample``).
+
+    Returns:
+        Path to the control BAM file, or ``[]`` if no control sample
+        was found (MACS3 will run without a control).
+    """
+    if wildcards.sample not in SAMPLES:
+        raise KeyError(f"Sample '{wildcards.sample}' not in samplesheet")
     sample_info = SAMPLES[wildcards.sample]
-    condition = sample_info.get('condition', '')
-    control_tag = config.get('chipseq', {}).get('control_tag', 'input')
-    
-    # Look for control sample with same condition + control_tag
+    condition = sample_info.get("condition", "")
+    control_tag = config.get("chipseq", {}).get("control_tag", "input")
     control_condition = f"{condition}_{control_tag}"
-    
+
     for sample_id, info in SAMPLES.items():
-        if info.get('condition') == control_condition:
-            if config.get("chipseq", {}).get("markdup", False):
-                return f"{GENOME_OUTDIR}/chipseq/bam/{sample_id}.dedup.bam"
-            else:
-                return f"{GENOME_OUTDIR}/chipseq/bam/{sample_id}.sorted.bam"
-    
-    # No control found
+        if info.get("condition") == control_condition:
+            suffix = "dedup.bam" if config.get("chipseq", {}).get("markdup", False) else "sorted.bam"
+            return f"{GENOME_OUTDIR}/chipseq/bam/{sample_id}.{suffix}"
+
+    # No control found — warn but don't fail (MACS3 can run without)
+    print(f"  ⚠ No control sample found for '{wildcards.sample}' "
+          f"(expected condition '{control_condition}')")
     return []
 
-def get_fastq_for_fastqc(wildcards):
-    """Get FASTQ files for FastQC analysis"""
-    reads = get_sample_reads(wildcards)
-    if "r2" in reads:
-        return [reads["r1"], reads["r2"]]
-    else:
-        return [reads["r1"]]
 
-def get_trimmed_reads(wildcards):
-    """Get trimmed reads for a sample"""
+def get_fastq_for_fastqc(wildcards) -> list[str]:
+    """Return FASTQ file paths suitable for FastQC.
+
+    Args:
+        wildcards: Snakemake wildcards (must include ``sample``).
+
+    Returns:
+        List containing one (single-end) or two (paired-end) FASTQ paths.
+    """
+    reads = get_sample_reads(wildcards)
+    return [reads["r1"]] + ([reads["r2"]] if "r2" in reads else [])
+
+
+def get_trimmed_reads(wildcards) -> dict[str, str]:
+    """Return expected trimmed-read paths for *wildcards.sample*.
+
+    For local paired-end data, both R1 and R2 paths are returned.  For
+    SRA data the R2 path is always included (actual layout is
+    auto-detected at download time).
+
+    Args:
+        wildcards: Snakemake wildcards (must include ``sample``).
+
+    Returns:
+        Dict with ``"r1"`` (and optionally ``"r2"``) trimmed FASTQ paths.
+    """
     sample_info = SAMPLES[wildcards.sample]
-    
-    # Return trimmed reads
-    reads = {"r1": f"{GENOME_OUTDIR}/trimmed/{wildcards.sample}_R1_trimmed.fastq.gz"}
-    
-    # Check if we should expect R2 (paired-end data)
+    reads: dict[str, str] = {
+        "r1": f"{GENOME_OUTDIR}/trimmed/{wildcards.sample}_R1_trimmed.fastq.gz"
+    }
+
     if has_local_files(sample_info):
-        # Local data - check if read2 exists
-        if 'read2' in sample_info and sample_info['read2']:
-            read2 = sample_info['read2']
-            if not pd.isna(read2) and str(read2).strip() not in {'', 'nan', 'NaN', 'none'}:
-                reads["r2"] = f"{GENOME_OUTDIR}/trimmed/{wildcards.sample}_R2_trimmed.fastq.gz"
-    elif is_valid_sra_id(sample_info.get('sra_id', '')):
-        # SRA data - will be auto-detected during trimming
-        # Always include R2 path, but actual presence depends on SRA layout
+        read2 = sample_info.get("read2", "")
+        if read2 and not pd.isna(read2) and str(read2).strip() not in INVALID_SENTINELS:
+            reads["r2"] = f"{GENOME_OUTDIR}/trimmed/{wildcards.sample}_R2_trimmed.fastq.gz"
+    elif is_valid_sra_id(sample_info.get("sra_id", "")):
         reads["r2"] = f"{GENOME_OUTDIR}/trimmed/{wildcards.sample}_R2_trimmed.fastq.gz"
-    
+
     return reads
 
-def get_input_reads(wildcards):
-    """Smart function that returns trimmed reads if trimming is enabled, otherwise raw reads"""
-    if config.get('adapter_trimming', {}).get('enabled', False):
+
+def get_input_reads(wildcards) -> dict[str, str]:
+    """Return trimmed reads if trimming is enabled, otherwise raw reads.
+
+    Args:
+        wildcards: Snakemake wildcards (must include ``sample``).
+
+    Returns:
+        Dict with ``"r1"`` (and optionally ``"r2"``) file paths.
+    """
+    if config.get("adapter_trimming", {}).get("enabled", False):
         return get_trimmed_reads(wildcards)
-    else:
-        return get_sample_reads(wildcards)
+    return get_sample_reads(wildcards)

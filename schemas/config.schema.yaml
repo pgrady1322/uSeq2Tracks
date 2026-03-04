@@ -1,0 +1,339 @@
+# ============================================================
+# uSeq2Tracks – Config Schema for Snakemake validate()
+# ============================================================
+# JSON-Schema-compatible YAML used by Snakemake's
+#   validate(config, schema="schemas/config.schema.yaml")
+# Only REQUIRED fields and type constraints are enforced here;
+# all other defaults are applied in the Snakefile.
+
+$schema: "http://json-schema.org/draft-07/schema#"
+description: "uSeq2Tracks pipeline configuration"
+type: object
+
+required:
+  - samplesheet
+  - genome
+  - genome_id
+  - outdir
+  - resources
+
+properties:
+  # ── Required top-level ──────────────────────────────────────
+  samplesheet:
+    type: string
+    description: "Path to the CSV sample sheet"
+
+  genome:
+    type: string
+    description: "Path to the reference FASTA file"
+
+  genome_id:
+    type: string
+    minLength: 1
+    pattern: "^[A-Za-z0-9_.+-]+$"
+    description: >
+      Short genome identifier used to tag output directories.
+      Must contain only alphanumerics, dots, underscores, hyphens, or plus signs.
+
+  gtf:
+    type: string
+    description: "Path to GTF annotation (optional, for RNA-seq counting)"
+    default: ""
+
+  outdir:
+    type: string
+    description: "Root output directory"
+    default: "./results"
+
+  rapid_mode:
+    type: boolean
+    description: "Skip QC and generate only essential browser tracks"
+    default: false
+
+  # ── Genome indexing ─────────────────────────────────────────
+  genome_indexing:
+    type: object
+    properties:
+      prefer_csi:
+        type: boolean
+        default: true
+      force_csi:
+        type: boolean
+        default: false
+
+  # ── Adapter trimming ────────────────────────────────────────
+  adapter_trimming:
+    type: object
+    properties:
+      enabled:
+        type: boolean
+        default: true
+      threads:
+        type: integer
+        minimum: 1
+        default: 4
+      min_length:
+        type: integer
+        minimum: 1
+        default: 20
+      quality_cutoff:
+        type: integer
+        minimum: 0
+        default: 20
+      poly_g_min_len:
+        type: integer
+        minimum: 0
+        default: 10
+      adapter1:
+        type: string
+        default: ""
+      adapter2:
+        type: string
+        default: ""
+      extra_opts:
+        type: string
+        default: ""
+
+  # ── Parameter sweep ─────────────────────────────────────────
+  parameter_sweep:
+    type: object
+    properties:
+      enabled:
+        type: boolean
+        default: false
+      qvalues:
+        type: array
+        items:
+          type: number
+          exclusiveMinimum: 0
+          maximum: 1
+      genrich_enabled:
+        type: boolean
+        default: false
+      genrich_qvalues:
+        type: array
+        items:
+          type: number
+
+  # ── Per-assay config blocks (common shape) ──────────────────
+  atacseq:
+    type: object
+    properties:
+      mapper:
+        type: string
+        enum: ["bowtie2", "bwa_mem2"]
+      threads:
+        type: integer
+        minimum: 1
+      markdup:
+        type: boolean
+      shift:
+        type: integer
+        description: "MACS3 --shift value (negative for ATAC-seq)"
+      extsize:
+        type: integer
+        minimum: 1
+        description: "MACS3 --extsize (fragment extension length)"
+      macs3_opts:
+        type: string
+      bw_norm:
+        type: string
+        enum: ["CPM", "RPKM", "BPM", "RPGC"]
+        description: "BigWig normalisation method"
+
+  wgs:
+    type: object
+    properties:
+      mapper:
+        type: string
+        enum: ["bwa_mem2", "bowtie2"]
+      threads:
+        type: integer
+        minimum: 1
+      markdup:
+        type: boolean
+      bw_norm:
+        type: string
+        enum: ["CPM", "RPKM", "BPM", "RPGC"]
+      variant_calling:
+        type: boolean
+
+  chipseq:
+    type: object
+    properties:
+      mapper:
+        type: string
+        enum: ["bowtie2", "bwa_mem2"]
+      threads:
+        type: integer
+        minimum: 1
+      markdup:
+        type: boolean
+      macs3_opts:
+        type: string
+      control_tag:
+        type: string
+        description: "Condition suffix used to identify control samples"
+      bw_norm:
+        type: string
+        enum: ["CPM", "RPKM", "BPM", "RPGC"]
+
+  cutrun:
+    type: object
+    properties:
+      mapper:
+        type: string
+        enum: ["bowtie2", "bwa_mem2"]
+      threads:
+        type: integer
+        minimum: 1
+      markdup:
+        type: boolean
+      shift:
+        type: integer
+      extsize:
+        type: integer
+        minimum: 1
+      macs3_opts:
+        type: string
+      bw_norm:
+        type: string
+        enum: ["CPM", "RPKM", "BPM", "RPGC"]
+
+  rnaseq:
+    type: object
+    properties:
+      mapper:
+        type: string
+        enum: ["star", "hisat2"]
+      threads:
+        type: integer
+        minimum: 1
+      strand_specific:
+        type: boolean
+      bw_norm:
+        type: string
+        enum: ["CPM", "RPKM", "BPM", "RPGC"]
+
+  nanopore:
+    type: object
+    properties:
+      mapper:
+        type: string
+        enum: ["minimap2"]
+      threads:
+        type: integer
+        minimum: 1
+      bw_norm:
+        type: string
+        enum: ["CPM", "RPKM", "BPM", "RPGC"]
+      variant_calling:
+        type: boolean
+      clair3_model:
+        type: string
+
+  pacbio:
+    type: object
+    properties:
+      mapper:
+        type: string
+        enum: ["minimap2"]
+      threads:
+        type: integer
+        minimum: 1
+      bw_norm:
+        type: string
+        enum: ["CPM", "RPKM", "BPM", "RPGC"]
+      deepvariant_model:
+        type: string
+
+  ancientdna:
+    type: object
+    properties:
+      mapper:
+        type: string
+        enum: ["bwa_aln", "bwa_mem"]
+      threads:
+        type: integer
+        minimum: 1
+      markdup:
+        type: boolean
+      min_mapq:
+        type: integer
+        minimum: 0
+        description: "Minimum mapping quality for filtering"
+      min_baseq:
+        type: integer
+        minimum: 0
+        description: "Minimum base quality for filtering"
+      bw_norm:
+        type: string
+        enum: ["CPM", "RPKM", "BPM", "RPGC"]
+      damage_analysis:
+        type: boolean
+
+  # ── Resources ───────────────────────────────────────────────
+  resources:
+    type: object
+    required:
+      - mapping_threads
+    properties:
+      default_threads:
+        type: integer
+        minimum: 1
+        default: 4
+      mapping_threads:
+        type: integer
+        minimum: 1
+        default: 8
+      sort_threads:
+        type: integer
+        minimum: 1
+        default: 4
+      index_threads:
+        type: integer
+        minimum: 1
+        default: 8
+      sort_memory_mb:
+        type: integer
+        minimum: 1000
+        default: 16000
+        description: "Memory in MB for samtools sort"
+      tmpdir:
+        type: string
+        default: "/tmp"
+
+  memory:
+    type: object
+    description: "Memory limits in MB for Snakemake resource declarations"
+    properties:
+      small:
+        type: integer
+        minimum: 1000
+      medium:
+        type: integer
+        minimum: 1000
+      large:
+        type: integer
+        minimum: 1000
+      xlarge:
+        type: integer
+        minimum: 1000
+
+  # ── UCSC hub ────────────────────────────────────────────────
+  ucsc:
+    type: object
+    properties:
+      hub_name:
+        type: string
+        pattern: "^[A-Za-z0-9_]+$"
+        description: "Hub name (alphanumeric + underscores only)"
+      hub_short_label:
+        type: string
+      hub_long_label:
+        type: string
+      hub_email:
+        type: string
+        format: email
+      genome_name:
+        type: string

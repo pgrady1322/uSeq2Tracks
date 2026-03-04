@@ -1,15 +1,18 @@
 # uSeq2Tracks: Universal Sequencing to Browser Tracks Pipeline
 
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/pgrady1322/uSeq2Tracks/releases)
+[![CI](https://github.com/pgrady1322/uSeq2Tracks/actions/workflows/ci.yml/badge.svg)](https://github.com/pgrady1322/uSeq2Tracks/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/useq2tracks)](https://pypi.org/project/useq2tracks/)
 [![Snakemake](https://img.shields.io/badge/snakemake-≥6.0.0-brightgreen.svg)](https://snakemake.github.io)
 [![Nextflow DSL2](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A521.10.3-23aa62.svg?labelColor=000000)](https://www.nextflow.io/)
-[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/python-≥3.10-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 A comprehensive pipeline for processing diverse sequencing datasets and generating standardized genomic tracks for UCSC Genome Browser visualization. uSeq2Tracks handles everything from raw sequencing data to publication-ready browser tracks with minimal user intervention.
 
 **Available in two implementations:**
-- **Snakemake** (stable, feature-complete)
-- **Nextflow** (new DSL2 implementation with enhanced cloud/HPC support)
+- **Snakemake** — stable, feature-complete
+- **Nextflow DSL2** — cloud/HPC-optimized with Docker & Singularity support
 
 ## 🌟 Overview
 
@@ -18,7 +21,7 @@ uSeq2Tracks is designed to standardize the processing of heterogeneous sequencin
 ### Key Features
 
 - **Universal Input Support**: Handles both local FASTQ files and SRA accessions
-- **Multiple Assay Types**: ChIP-seq, ATAC-seq, CUT&RUN, RNA-seq, WGS, Ancient DNA, Long-reads
+- **Multiple Assay Types**: ChIP-seq, ATAC-seq, CUT&RUN, RNA-seq, WGS, Long-reads, etc.
 - **Two Processing Modes**: Standard (full QC) and Rapid (streamlined for public data)
 - **Genome-ID Organization**: All outputs tagged with unique genome identifiers
 - **UCSC Integration**: Automatic track hub generation for browser visualization
@@ -47,9 +50,15 @@ uSeq2Tracks is designed to standardize the processing of heterogeneous sequencin
 git clone https://github.com/pgrady1322/uSeq2Tracks.git
 cd uSeq2Tracks
 
-# Install dependencies with conda/mamba
+# Create the conda environment (bioinformatics tools + dependencies)
 conda env create -f envs/useq2tracks.yml
 conda activate useq2tracks
+
+# Install the useq2tracks CLI
+pip install -e .
+
+# Or install the CLI from PyPI (without pipeline files)
+# pip install useq2tracks
 ```
 
 ### 2. Configuration
@@ -89,18 +98,49 @@ ENCODE_Input,chipseq,SRR1536406,,,H3K27ac,input,input
 ### 4. Run the Pipeline
 
 ```bash
-# Execute with the provided script
-./Executor.sh
+# ── Using the useq2tracks CLI (recommended) ──
 
-# Or run directly with Snakemake
-snakemake --use-conda --jobs 100
+# Snakemake (default engine)
+useq2tracks run                              # all cores, config.yaml
+useq2tracks run --cores 16                   # limit to 16 cores
+useq2tracks run --dryrun                     # preview what will run
+useq2tracks run --rapid                      # skip QC, essential tracks only
+useq2tracks run --profile slurm              # submit to SLURM
+useq2tracks run --resume                     # resume interrupted run
+
+# Nextflow
+useq2tracks run --engine nextflow
+useq2tracks run --engine nextflow --profile docker
+useq2tracks run --engine nextflow --resume
+
+# Forward extra engine-specific flags after '--'
+useq2tracks run -- --printshellcmds          # Snakemake shell echo
+useq2tracks run --engine nextflow -- -with-tower   # Nextflow Tower
+
+# ── Other CLI subcommands ──
+
+# Validate inputs before running
+useq2tracks validate samples.csv --configfile config.yaml
+
+# Show pipeline info
+useq2tracks info
+
+# Generate a standalone UCSC track hub
+useq2tracks hub --genome-id galGal6 --hub-name MyHub \
+  --hub-short-label "My Hub" --hub-long-label "My Sequencing Hub" \
+  --genome-name galGal6 --hub-email user@example.com \
+  --bigwigs *.bw --output-dir ucsc_hub/
+
+# ── Or invoke engines directly (advanced) ──
+snakemake --use-conda --cores all
+nextflow run main.nf -profile docker --genome_id galGal6
 ```
 
 ---
 
-## 🔄 Nextflow Implementation (New!)
+## 🔄 Nextflow Implementation
 
-uSeq2Tracks is now available as a **Nextflow DSL2** pipeline with improved scalability, cloud integration, and HPC support. The Nextflow version provides all core functionality with enhanced portability and parallelization.
+uSeq2Tracks includes a **Nextflow DSL2** pipeline for improved scalability, cloud integration, and HPC support. The Nextflow implementation provides all core functionality with enhanced portability and parallelization.
 
 ### Why Use Nextflow?
 
@@ -181,24 +221,24 @@ nextflow run main.nf -profile docker -resume
 
 ### Nextflow Features
 
-**Currently Implemented:**
-- ✅ ATAC-seq workflow (complete)
-- ✅ ChIP-seq workflow with control matching (complete)
-- ✅ CUT&RUN workflow (complete)
+**Implemented Workflows:**
+- ✅ ATAC-seq workflow with Tn5 shift correction
+- ✅ ChIP-seq workflow with control matching
+- ✅ CUT&RUN workflow
 - ✅ Genome preparation and indexing
 - ✅ UCSC track hub generation
 - ✅ Samplesheet validation
 - ✅ Dynamic resource allocation
 - ✅ Multiple execution profiles
 
-**In Development:**
-- 🔨 RNA-seq workflow
-- 🔨 WGS workflow
-- 🔨 Long-read workflows (Nanopore, PacBio)
-- 🔨 Ancient DNA workflow
-- 🔨 SRA download integration
-- 🔨 FastQC/MultiQC integration
-- 🔨 Replicate merging
+**Snakemake-only (not yet ported to Nextflow):**
+- RNA-seq workflow
+- WGS workflow
+- Long-read workflows (Nanopore, PacBio)
+- Ancient DNA workflow
+- SRA download integration
+- FastQC/MultiQC integration
+- Replicate merging
 
 ### Nextflow Profiles
 
@@ -312,7 +352,7 @@ rm -rf work/ && nextflow run main.nf
 
 | Feature | Snakemake | Nextflow |
 |---------|-----------|----------|
-| **Maturity** | Stable, feature-complete | New implementation |
+| **Maturity** | Stable, feature-complete | Stable (core assays) |
 | **Learning Curve** | Python-based (easier for most) | Groovy-based |
 | **Parallelization** | Good | Better (automatic) |
 | **Cloud Support** | Via plugins | Native |
@@ -322,16 +362,14 @@ rm -rf work/ && nextflow run main.nf
 | **Best For** | General bioinformatics | HPC/Cloud deployments |
 
 **Recommendation:**
-- Use **Snakemake** for: Stable production, Python familiarity, feature-complete workflows
-- Use **Nextflow** for: HPC/cloud environments, better parallelization, modern DevOps practices
+- Use **Snakemake** for: All assay types, Python familiarity, full feature set
+- Use **Nextflow** for: HPC/cloud environments, containerized execution, core epigenomic assays
 
 ### Nextflow Documentation
 
 For complete Nextflow documentation, see:
-- `nextflow/README.md` - Comprehensive guide
-- `nextflow/IMPLEMENTATION_STATUS.md` - Current implementation status
-- `nextflow/QUICK_REFERENCE.md` - Quick command reference
-- `nextflow/examples/` - Example configurations
+- `nextflow/QUICK_REFERENCE.md` — Quick command reference
+- `nextflow/examples/` — Example configurations
 
 ---
 
@@ -983,14 +1021,16 @@ rapid_mode: false
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome! To get started:
 
-### Development Setup
 ```bash
 git clone https://github.com/pgrady1322/uSeq2Tracks.git
 cd uSeq2Tracks
-conda env create -f envs/development.yml
-conda activate useq2tracks-dev
+conda env create -f envs/useq2tracks.yml
+conda activate useq2tracks
+pip install -e ".[dev]"
+make test        # run tests
+make check       # lint + format check
 ```
 
 ## 📄 License
@@ -1008,8 +1048,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 If you use uSeq2Tracks in your research, please cite:
 
 ```
-Patrick Grady (2025). uSeq2Tracks: A universal pipeline for sequencing data to genome browser tracks. 
-Journal Name, Volume(Issue), pages. DOI: 10.xxxx/xxxxx
+Patrick Grady (2026). uSeq2Tracks: A universal pipeline for sequencing
+data to genome browser tracks. https://github.com/pgrady1322/uSeq2Tracks
 ```
 
 ## 🙏 Acknowledgments

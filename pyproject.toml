@@ -1,0 +1,83 @@
+# ============================================================
+# uSeq2Tracks – project metadata & build config
+# ============================================================
+
+[build-system]
+requires = ["setuptools>=68", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "useq2tracks"
+version = "1.0.0"
+description = "Universal Sequencing-to-Genome-Browser-Tracks Pipeline"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "Patrick Grady" }]
+readme = "README.md"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+keywords = ["bioinformatics", "genomics", "ucsc", "snakemake", "pipeline"]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov", "ruff", "mypy"]
+yaml = ["pyyaml>=6.0"]
+
+[project.urls]
+Homepage = "https://github.com/pgrady1322/uSeq2Tracks"
+Repository = "https://github.com/pgrady1322/uSeq2Tracks"
+Issues = "https://github.com/pgrady1322/uSeq2Tracks/issues"
+
+[project.scripts]
+useq2tracks = "useq2tracks.cli:main"
+useq2tracks-check-samplesheet = "useq2tracks.check_samplesheet:main"
+useq2tracks-generate-hub = "useq2tracks.generate_ucsc_hub:main"
+
+# ── Package discovery ─────────────────────────────────────────
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# ── Ruff ──────────────────────────────────────────────────────
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "SIM108", # ternary operator suggestion
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["useq2tracks"]
+
+# ── Pytest ────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+
+# ── MyPy ──────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
