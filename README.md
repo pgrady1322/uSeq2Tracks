@@ -11,8 +11,8 @@
 A comprehensive pipeline for processing diverse sequencing datasets and generating standardized genomic tracks for UCSC Genome Browser visualization. uSeq2Tracks handles everything from raw sequencing data to publication-ready browser tracks with minimal user intervention.
 
 **Available in two implementations:**
-- **Snakemake** (stable, feature-complete)
-- **Nextflow** (new DSL2 implementation with enhanced cloud/HPC support)
+- **Snakemake** — stable, feature-complete
+- **Nextflow DSL2** — cloud/HPC-optimized with Docker & Singularity support
 
 ## 🌟 Overview
 
@@ -46,19 +46,19 @@ uSeq2Tracks is designed to standardize the processing of heterogeneous sequencin
 ### 1. Installation
 
 ```bash
-# Install the Python helper utilities from PyPI
-pip install useq2tracks
-
-# Clone the repository (for the Snakemake / Nextflow pipeline files)
+# Clone the repository
 git clone https://github.com/pgrady1322/uSeq2Tracks.git
 cd uSeq2Tracks
 
-# Install bioinformatics dependencies with conda/mamba
+# Create the conda environment (bioinformatics tools + dependencies)
 conda env create -f envs/useq2tracks.yml
 conda activate useq2tracks
 
-# Or install the helpers in editable mode for development
+# Install the useq2tracks CLI
 pip install -e .
+
+# Or install the CLI from PyPI (without pipeline files)
+# pip install useq2tracks
 ```
 
 ### 2. Configuration
@@ -140,7 +140,7 @@ nextflow run main.nf -profile docker --genome_id galGal6
 
 ## 🔄 Nextflow Implementation
 
-uSeq2Tracks is now available as a **Nextflow DSL2** pipeline with improved scalability, cloud integration, and HPC support. The Nextflow version provides all core functionality with enhanced portability and parallelization.
+uSeq2Tracks includes a **Nextflow DSL2** pipeline for improved scalability, cloud integration, and HPC support. The Nextflow implementation provides all core functionality with enhanced portability and parallelization.
 
 ### Why Use Nextflow?
 
@@ -221,24 +221,24 @@ nextflow run main.nf -profile docker -resume
 
 ### Nextflow Features
 
-**Currently Implemented:**
-- ✅ ATAC-seq workflow (complete)
-- ✅ ChIP-seq workflow with control matching (complete)
-- ✅ CUT&RUN workflow (complete)
+**Implemented Workflows:**
+- ✅ ATAC-seq workflow with Tn5 shift correction
+- ✅ ChIP-seq workflow with control matching
+- ✅ CUT&RUN workflow
 - ✅ Genome preparation and indexing
 - ✅ UCSC track hub generation
 - ✅ Samplesheet validation
 - ✅ Dynamic resource allocation
 - ✅ Multiple execution profiles
 
-**In Development:**
-- 🔨 RNA-seq workflow
-- 🔨 WGS workflow
-- 🔨 Long-read workflows (Nanopore, PacBio)
-- 🔨 Ancient DNA workflow
-- 🔨 SRA download integration
-- 🔨 FastQC/MultiQC integration
-- 🔨 Replicate merging
+**Snakemake-only (not yet ported to Nextflow):**
+- RNA-seq workflow
+- WGS workflow
+- Long-read workflows (Nanopore, PacBio)
+- Ancient DNA workflow
+- SRA download integration
+- FastQC/MultiQC integration
+- Replicate merging
 
 ### Nextflow Profiles
 
@@ -352,7 +352,7 @@ rm -rf work/ && nextflow run main.nf
 
 | Feature | Snakemake | Nextflow |
 |---------|-----------|----------|
-| **Maturity** | Stable, feature-complete | New implementation |
+| **Maturity** | Stable, feature-complete | Stable (core assays) |
 | **Learning Curve** | Python-based (easier for most) | Groovy-based |
 | **Parallelization** | Good | Better (automatic) |
 | **Cloud Support** | Via plugins | Native |
@@ -362,16 +362,14 @@ rm -rf work/ && nextflow run main.nf
 | **Best For** | General bioinformatics | HPC/Cloud deployments |
 
 **Recommendation:**
-- Use **Snakemake** for: Stable production, Python familiarity, feature-complete workflows
-- Use **Nextflow** for: HPC/cloud environments, better parallelization, modern DevOps practices
+- Use **Snakemake** for: All assay types, Python familiarity, full feature set
+- Use **Nextflow** for: HPC/cloud environments, containerized execution, core epigenomic assays
 
 ### Nextflow Documentation
 
 For complete Nextflow documentation, see:
-- `nextflow/README.md` - Comprehensive guide
-- `nextflow/IMPLEMENTATION_STATUS.md` - Current implementation status
-- `nextflow/QUICK_REFERENCE.md` - Quick command reference
-- `nextflow/examples/` - Example configurations
+- `nextflow/QUICK_REFERENCE.md` — Quick command reference
+- `nextflow/examples/` — Example configurations
 
 ---
 
